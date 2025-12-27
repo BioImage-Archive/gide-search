@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIDE Search - Biological Imaging Database Search</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <header class="container">
+        <h1>GIDE Search</h1>
+        <p>Unified search across IDR, SSBD, and BioImage Archive</p>
+    </header>
+
+    <main class="container">
+        <div class="search-container">
+            <form id="search-form" role="search">
+                <input
+                    type="search"
+                    id="search-input"
+                    name="q"
+                    placeholder="Search studies (e.g., fluorescence, zebrafish, confocal...)"
+                    aria-label="Search studies"
+                >
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="content-grid">
+            <aside class="facets">
+                <h3>Filters</h3>
+
+                <details open>
+                    <summary>Source</summary>
+                    <div id="facet-sources" class="facet-list"></div>
+                </details>
+
+                <details open>
+                    <summary>Organism</summary>
+                    <div id="facet-organisms" class="facet-list"></div>
+                </details>
+
+                <details open>
+                    <summary>Imaging Method</summary>
+                    <div id="facet-methods" class="facet-list"></div>
+                </details>
+
+                <details>
+                    <summary>Year</summary>
+                    <div id="facet-years" class="facet-list"></div>
+                </details>
+
+                <button type="button" id="clear-filters" class="secondary outline">Clear Filters</button>
+            </aside>
+
+            <section class="results">
+                <div id="results-header">
+                    <p id="results-count"></p>
+                </div>
+                <div id="results-list"></div>
+                <div id="pagination"></div>
+            </section>
+        </div>
+    </main>
+
+    <footer class="container">
+        <p>
+            <small>
+                Data from
+                <a href="https://idr.openmicroscopy.org/" target="_blank">IDR</a>,
+                <a href="https://ssbd.riken.jp/" target="_blank">SSBD</a>, and
+                <a href="https://www.ebi.ac.uk/bioimage-archive/" target="_blank">BioImage Archive</a>
+            </small>
+        </p>
+    </footer>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

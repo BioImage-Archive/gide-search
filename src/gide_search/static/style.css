@@ -1,0 +1,416 @@
+/* GIDE Search Custom Styles - Inspired by founding-gide.eurobioimaging.eu */
+
+@import url('https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap');
+
+:root {
+    /* GIDE Brand Colors */
+    --gide-cyan: #2de2d9;
+    --gide-teal: #28a7a0;
+    --gide-teal-dark: #236a65;
+    --gide-navy: #0d2624;
+    --gide-navy-deep: #071413;
+    --gide-orange: #ff8c3e;
+    --gide-text: #282828;
+    --gide-light-bg: #f2f2f2;
+
+    /* Source badges */
+    --source-idr: #2de2d9;
+    --source-ssbd: #28a7a0;
+    --source-bia: #ff8c3e;
+
+    /* Override Pico defaults */
+    --pico-font-family: "Source Sans 3", "Helvetica Neue", Helvetica, Arial, sans-serif;
+    --pico-primary: #2de2d9;
+    --pico-primary-hover: #28a7a0;
+}
+
+body {
+    font-family: var(--pico-font-family);
+    color: var(--gide-text);
+}
+
+/* Header - GIDE branded */
+header.container {
+    background: var(--gide-navy);
+    color: white;
+    text-align: center;
+    padding: 2.5rem 1rem;
+    margin: 0;
+    max-width: 100%;
+    border-radius: 0;
+}
+
+header.container h1 {
+    margin-bottom: 0.5rem;
+    color: var(--gide-cyan);
+    font-weight: 700;
+    font-size: 2.5rem;
+}
+
+header.container p {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 1.1rem;
+}
+
+/* Main content area */
+main.container {
+    padding-top: 2rem;
+}
+
+/* Search Form - pill style */
+.search-container {
+    max-width: 700px;
+    margin: 0 auto 2rem;
+}
+
+.search-container form {
+    display: flex;
+    gap: 0.75rem;
+}
+
+.search-container input[type="search"] {
+    flex: 1;
+    margin-bottom: 0;
+    border-radius: 9999px;
+    padding: 0.75rem 1.5rem;
+    border: 2px solid var(--gide-teal);
+    font-size: 1rem;
+}
+
+.search-container input[type="search"]:focus {
+    border-color: var(--gide-cyan);
+    box-shadow: 0 0 0 3px rgba(45, 226, 217, 0.2);
+}
+
+.search-container button {
+    margin-bottom: 0;
+    width: auto;
+    border-radius: 9999px;
+    padding: 0.75rem 2rem;
+    background: var(--gide-cyan);
+    border: none;
+    color: var(--gide-navy);
+    font-weight: 600;
+    transition: background 0.2s ease;
+}
+
+.search-container button:hover {
+    background: var(--gide-teal);
+    color: white;
+}
+
+/* Layout */
+.content-grid {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .content-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .facets {
+        order: 2;
+    }
+}
+
+/* Facets Sidebar */
+.facets {
+    position: sticky;
+    top: 1rem;
+    align-self: start;
+    background: var(--gide-light-bg);
+    padding: 1.25rem;
+    border-radius: 12px;
+}
+
+.facets h3 {
+    margin-bottom: 1rem;
+    color: var(--gide-navy);
+    font-weight: 700;
+}
+
+.facets details {
+    margin-bottom: 0.75rem;
+    background: white;
+    border-radius: 8px;
+    padding: 0.5rem 0.75rem;
+}
+
+.facets details[open] {
+    padding-bottom: 0.75rem;
+}
+
+.facets summary {
+    font-weight: 600;
+    cursor: pointer;
+    color: var(--gide-teal-dark);
+    padding: 0.5rem 0;
+}
+
+.facet-list {
+    max-height: 200px;
+    overflow-y: auto;
+    padding: 0.5rem 0;
+}
+
+.facet-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.facet-item input[type="checkbox"] {
+    margin: 0;
+    width: auto;
+    accent-color: var(--gide-cyan);
+}
+
+.facet-label {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.facet-count {
+    color: var(--gide-teal);
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.year-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.year-range input {
+    width: 80px;
+    margin: 0;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+}
+
+.year-range button {
+    padding: 0.25rem 0.75rem;
+    margin: 0;
+    border-radius: 9999px;
+    background: var(--gide-teal);
+    border: none;
+    color: white;
+    font-size: 0.85rem;
+}
+
+#clear-filters {
+    margin-top: 1rem;
+    width: 100%;
+    border-radius: 9999px;
+    background: transparent;
+    border: 2px solid var(--gide-teal);
+    color: var(--gide-teal);
+}
+
+#clear-filters:hover {
+    background: var(--gide-teal);
+    color: white;
+}
+
+/* Results */
+.results {
+    min-height: 400px;
+}
+
+#results-count {
+    margin-bottom: 1rem;
+    color: var(--gide-teal-dark);
+    font-weight: 600;
+}
+
+.result-card {
+    margin-bottom: 1rem;
+    padding: 1.25rem;
+    border-radius: 12px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(13, 38, 36, 0.08);
+    border: 1px solid rgba(40, 167, 160, 0.1);
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.result-card:hover {
+    box-shadow: 0 6px 20px rgba(13, 38, 36, 0.12);
+    transform: translateY(-2px);
+}
+
+.result-card header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+    padding: 0;
+}
+
+.result-card h4 {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 600;
+}
+
+.result-card h4 a {
+    text-decoration: none;
+    color: var(--gide-navy);
+}
+
+.result-card h4 a:hover {
+    color: var(--gide-teal);
+}
+
+.result-card .description {
+    color: #555;
+    font-size: 0.9rem;
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.result-card footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding: 0;
+    background: none;
+    border: none;
+}
+
+/* Source Badges - pill style */
+.source-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: fit-content;
+}
+
+.source-idr {
+    background-color: var(--source-idr);
+    color: var(--gide-navy);
+}
+
+.source-ssbd {
+    background-color: var(--source-ssbd);
+    color: white;
+}
+
+.source-bia {
+    background-color: var(--source-bia);
+    color: white;
+}
+
+/* Tags */
+.tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+
+.tag {
+    display: inline-block;
+    padding: 0.2rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.tag.organism {
+    background-color: rgba(45, 226, 217, 0.15);
+    color: var(--gide-teal-dark);
+}
+
+.tag.method {
+    background-color: rgba(255, 140, 62, 0.15);
+    color: #b85a1a;
+}
+
+.date {
+    white-space: nowrap;
+    color: var(--gide-teal);
+    font-size: 0.85rem;
+}
+
+/* Pagination */
+.pagination-controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    margin-top: 2rem;
+}
+
+.pagination-controls button {
+    width: auto;
+    margin: 0;
+    border-radius: 9999px;
+    padding: 0.5rem 1.5rem;
+    background: var(--gide-teal);
+    border: none;
+    color: white;
+}
+
+.pagination-controls button:hover:not(:disabled) {
+    background: var(--gide-navy);
+}
+
+.pagination-controls button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination-controls span {
+    color: var(--gide-teal-dark);
+    font-weight: 600;
+}
+
+/* Error state */
+.error {
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+/* Footer - GIDE branded */
+footer.container {
+    background: var(--gide-navy-deep);
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 3rem;
+    padding: 2rem 1rem;
+    text-align: center;
+    max-width: 100%;
+    border-radius: 0;
+}
+
+footer.container a {
+    color: var(--gide-cyan);
+}
+
+footer.container a:hover {
+    color: white;
+}
+
+/* Loading state */
+[aria-busy="true"] {
+    color: var(--gide-teal);
+}
