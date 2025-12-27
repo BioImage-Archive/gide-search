@@ -158,12 +158,38 @@ class SSBDTransformer:
         """Parse SSBD_paper_information to Publication."""
         doi = self._get_literal(paper_uri, ONTOLOGY.has_doi)
         pmid = self._get_literal(paper_uri, ONTOLOGY.has_PMID)
-        title = self._get_literal(paper_uri, ONTOLOGY.has_paper_information)
+        paper_info = self._get_literal(paper_uri, ONTOLOGY.has_paper_information)
+
+        # Extract authors and title from citation string
+        # Format: "Author1, Author2 (Year) Title, Journal, ..."
+        authors_name = None
+        title = paper_info
+        year = None
+
+        if paper_info:
+            import re
+
+            # Match pattern: "Authors (Year) Rest..."
+            match = re.match(r"^(.+?)\s*\((\d{4})\)\s*(.+)$", paper_info, re.DOTALL)
+            if match:
+                authors_name = match.group(1).strip()
+                try:
+                    year = int(match.group(2))
+                except ValueError:
+                    pass
+                # Use the rest as title (first part before comma is typically the title)
+                rest = match.group(3).strip()
+                # Try to extract just the title (before journal info)
+                parts = rest.split(",")
+                if parts:
+                    title = parts[0].strip()
 
         return Publication(
             doi=doi,
             pubmed_id=pmid,
             title=title,
+            authors_name=authors_name,
+            year=year,
         )
 
     def _get_dataset_id(self, dataset_uri: URIRef) -> str:

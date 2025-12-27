@@ -56,6 +56,7 @@ class Publication(BaseModel):
     pubmed_id: str | None = None
     pmc_id: str | None = None
     title: str | None = None
+    authors_name: str | None = Field(default=None, description="Free text list of author names")
     year: int | None = None
 
 
