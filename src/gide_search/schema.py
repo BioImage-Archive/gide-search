@@ -30,11 +30,13 @@ class ImagingMethod(BaseModel):
     )
 
 
-class Affiliation(BaseModel):
+class Organisation(BaseModel):
     """Institution or organization affiliation."""
 
-    name: str
-    ror_id: str | None = Field(default=None, description="Research Organization Registry ID")
+    display_name: str
+    rorid: str | None = Field(default=None, description="Research Organization Registry ID")
+    address: str | None = None
+    website: str | None = None
     country: str | None = None
 
 
@@ -44,7 +46,7 @@ class Author(BaseModel):
     name: str
     orcid: str | None = None
     email: str | None = None
-    affiliations: list[Affiliation] = Field(default_factory=list)
+    affiliations: list[Organisation] = Field(default_factory=list)
 
 
 class Publication(BaseModel):

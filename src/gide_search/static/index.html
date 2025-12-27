@@ -1,78 +1,207 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GIDE Search - Biological Imaging Database Search</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
-    <header class="container">
-        <h1>GIDE Search</h1>
-        <p>Unified search across IDR, SSBD, and BioImage Archive</p>
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div class="top-bar-inner">
+            <a href="https://founding-gide.eurobioimaging.eu/" target="_blank" class="gide-link">foundingGIDE Project</a>
+            <nav class="top-nav">
+                <a href="https://idr.openmicroscopy.org/" target="_blank">IDR</a>
+                <a href="https://ssbd.riken.jp/" target="_blank">SSBD</a>
+                <a href="https://www.ebi.ac.uk/bioimage-archive/" target="_blank">BioImage Archive</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <header class="site-header">
+        <div class="header-inner">
+            <div class="logo-section">
+                <div class="logo-icon">
+                    <svg viewBox="0 0 48 48" width="48" height="48">
+                        <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="2"/>
+                        <circle cx="24" cy="24" r="8" fill="currentColor" opacity="0.3"/>
+                        <circle cx="24" cy="14" r="4" fill="currentColor"/>
+                        <circle cx="32" cy="28" r="4" fill="currentColor"/>
+                        <circle cx="16" cy="28" r="4" fill="currentColor"/>
+                    </svg>
+                </div>
+                <div class="logo-text">
+                    <h1>GIDE Search</h1>
+                    <p>Unified search across biological imaging databases</p>
+                </div>
+            </div>
+            <div class="search-box">
+                <form id="search-form" role="search">
+                    <input
+                        type="search"
+                        id="search-input"
+                        name="q"
+                        placeholder="Search studies (e.g., fluorescence, zebrafish, confocal...)"
+                        aria-label="Search studies"
+                    >
+                    <button type="submit">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"/>
+                            <path d="m21 21-4.35-4.35"/>
+                        </svg>
+                        Search
+                    </button>
+                </form>
+            </div>
+        </div>
     </header>
 
-    <main class="container">
-        <div class="search-container">
-            <form id="search-form" role="search">
-                <input
-                    type="search"
-                    id="search-input"
-                    name="q"
-                    placeholder="Search studies (e.g., fluorescence, zebrafish, confocal...)"
-                    aria-label="Search studies"
-                >
-                <button type="submit">Search</button>
-            </form>
+    <!-- Navigation -->
+    <nav class="main-nav">
+        <div class="nav-inner">
+            <a href="/" class="nav-link active">Browse</a>
+            <a href="https://founding-gide.eurobioimaging.eu/about-us/" target="_blank" class="nav-link">About</a>
+            <a href="/docs" target="_blank" class="nav-link">API</a>
         </div>
+    </nav>
 
-        <div class="content-grid">
-            <aside class="facets">
-                <h3>Filters</h3>
+    <!-- Breadcrumb -->
+    <div class="breadcrumb">
+        <div class="breadcrumb-inner">
+            <a href="/">GIDE Search</a>
+            <span class="separator">&gt;</span>
+            <span>Browse Studies</span>
+        </div>
+    </div>
 
-                <details open>
-                    <summary>Source</summary>
-                    <div id="facet-sources" class="facet-list"></div>
-                </details>
+    <!-- Main content -->
+    <main class="main-content">
+        <div class="content-wrapper">
+            <!-- Filters sidebar -->
+            <aside class="filters-sidebar">
+                <div class="filters-header">
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>
+                    </svg>
+                    <h2>Filter by</h2>
+                </div>
 
-                <details open>
-                    <summary>Organism</summary>
-                    <div id="facet-organisms" class="facet-list"></div>
-                </details>
+                <div class="filter-section" data-filter="sources">
+                    <button class="filter-toggle" aria-expanded="true">
+                        <span class="filter-name">Source</span>
+                        <span class="filter-count" id="sources-count"></span>
+                        <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="facet-sources"></div>
+                </div>
 
-                <details open>
-                    <summary>Imaging Method</summary>
-                    <div id="facet-methods" class="facet-list"></div>
-                </details>
+                <div class="filter-section" data-filter="organisms">
+                    <button class="filter-toggle" aria-expanded="true">
+                        <span class="filter-name">Organism</span>
+                        <span class="badge">Top 10</span>
+                        <span class="filter-count" id="organisms-count"></span>
+                        <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="facet-organisms"></div>
+                </div>
 
-                <details>
-                    <summary>Year</summary>
-                    <div id="facet-years" class="facet-list"></div>
-                </details>
+                <div class="filter-section" data-filter="methods">
+                    <button class="filter-toggle" aria-expanded="true">
+                        <span class="filter-name">Imaging Method</span>
+                        <span class="badge">Top 10</span>
+                        <span class="filter-count" id="methods-count"></span>
+                        <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="facet-methods"></div>
+                </div>
 
-                <button type="button" id="clear-filters" class="secondary outline">Clear Filters</button>
+                <div class="filter-section" data-filter="years">
+                    <button class="filter-toggle" aria-expanded="true">
+                        <span class="filter-name">Release Year</span>
+                        <span class="filter-count" id="years-count"></span>
+                        <svg class="chevron" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+                    <div class="filter-options" id="facet-years"></div>
+                </div>
+
+                <button type="button" id="clear-filters" class="clear-filters-btn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 6 6 18M6 6l12 12"/>
+                    </svg>
+                    Clear all filters
+                </button>
             </aside>
 
-            <section class="results">
-                <div id="results-header">
-                    <p id="results-count"></p>
+            <!-- Results area -->
+            <section class="results-area">
+                <div class="results-header">
+                    <p id="results-count" class="results-count"></p>
+                    <div class="sort-controls">
+                        <label for="sort-select">Sort by:</label>
+                        <select id="sort-select">
+                            <option value="relevance">Relevance</option>
+                            <option value="date_desc">Newest first</option>
+                            <option value="date_asc">Oldest first</option>
+                        </select>
+                    </div>
                 </div>
-                <div id="results-list"></div>
-                <div id="pagination"></div>
+                <div id="results-list" class="results-list"></div>
+                <div id="pagination" class="pagination"></div>
             </section>
         </div>
     </main>
 
-    <footer class="container">
-        <p>
-            <small>
-                Data from
-                <a href="https://idr.openmicroscopy.org/" target="_blank">IDR</a>,
-                <a href="https://ssbd.riken.jp/" target="_blank">SSBD</a>, and
-                <a href="https://www.ebi.ac.uk/bioimage-archive/" target="_blank">BioImage Archive</a>
-            </small>
-        </p>
+    <!-- Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-main">
+                <div class="footer-brand">
+                    <div class="footer-logo">
+                        <svg viewBox="0 0 48 48" width="36" height="36">
+                            <circle cx="24" cy="24" r="20" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="24" cy="24" r="8" fill="currentColor" opacity="0.3"/>
+                            <circle cx="24" cy="14" r="4" fill="currentColor"/>
+                            <circle cx="32" cy="28" r="4" fill="currentColor"/>
+                            <circle cx="16" cy="28" r="4" fill="currentColor"/>
+                        </svg>
+                        <span>GIDE Search</span>
+                    </div>
+                    <p>A unified search portal for biological imaging databases, part of the foundingGIDE project.</p>
+                </div>
+                <div class="footer-links">
+                    <h3>Data Sources</h3>
+                    <ul>
+                        <li><a href="https://idr.openmicroscopy.org/" target="_blank">Image Data Resource (IDR)</a></li>
+                        <li><a href="https://ssbd.riken.jp/" target="_blank">SSBD Database</a></li>
+                        <li><a href="https://www.ebi.ac.uk/bioimage-archive/" target="_blank">BioImage Archive</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h3>Resources</h3>
+                    <ul>
+                        <li><a href="/docs" target="_blank">API Documentation</a></li>
+                        <li><a href="https://founding-gide.eurobioimaging.eu/" target="_blank">foundingGIDE Project</a></li>
+                        <li><a href="https://www.eurobioimaging.eu/" target="_blank">Euro-BioImaging</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>Part of the <a href="https://founding-gide.eurobioimaging.eu/" target="_blank">foundingGIDE</a> project - Founding a Global Image Data Ecosystem</p>
+            </div>
+        </div>
     </footer>
 
     <script src="/static/app.js"></script>

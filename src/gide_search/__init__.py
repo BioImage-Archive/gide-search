@@ -1,12 +1,12 @@
 """Unified search system for biological imaging databases."""
 
 from .schema import (
-    Affiliation,
     Author,
     BioSample,
     Funding,
     ImageAcquisition,
     ImagingMethod,
+    Organisation,
     Organism,
     Publication,
     Source,
@@ -14,12 +14,12 @@ from .schema import (
 )
 
 __all__ = [
-    "Affiliation",
     "Author",
     "BioSample",
     "Funding",
     "ImageAcquisition",
     "ImagingMethod",
+    "Organisation",
     "Organism",
     "Publication",
     "Source",

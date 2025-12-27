@@ -24,6 +24,7 @@ const clearFiltersBtn = document.getElementById('clear-filters');
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadStateFromURL();
+    setupFilterToggles();
     performSearch();
 
     searchForm.addEventListener('submit', handleSearch);
@@ -33,6 +34,17 @@ document.addEventListener('DOMContentLoaded', () => {
         performSearch();
     });
 });
+
+function setupFilterToggles() {
+    document.querySelectorAll('.filter-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const section = toggle.closest('.filter-section');
+            const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+            toggle.setAttribute('aria-expanded', !isExpanded);
+            section.setAttribute('aria-expanded', !isExpanded);
+        });
+    });
+}
 
 function loadStateFromURL() {
     const params = new URLSearchParams(window.location.search);
@@ -80,7 +92,12 @@ async function performSearch() {
     params.set('size', PAGE_SIZE);
     params.set('offset', state.offset);
 
-    resultsList.innerHTML = '<p aria-busy="true">Searching...</p>';
+    resultsList.innerHTML = `
+        <div class="loading">
+            <div class="loading-spinner"></div>
+            <p>Searching...</p>
+        </div>
+    `;
 
     try {
         const response = await fetch(`/search?${params.toString()}`);
@@ -90,89 +107,153 @@ async function performSearch() {
         renderFacets(data.facets);
         renderPagination(data.total);
     } catch (error) {
-        resultsList.innerHTML = `<p class="error">Error: ${error.message}</p>`;
+        resultsList.innerHTML = `
+            <div class="error-message">
+                <p>Error: ${escapeHtml(error.message)}</p>
+                <p>Please try again or check if the server is running.</p>
+            </div>
+        `;
     }
 }
 
 function renderResults(data) {
-    resultsCount.textContent = `${data.total.toLocaleString()} studies found`;
+    const start = state.offset + 1;
+    const end = Math.min(state.offset + PAGE_SIZE, data.total);
+    resultsCount.textContent = `${start} - ${end} of ${data.total.toLocaleString()} results`;
 
     if (data.hits.length === 0) {
-        resultsList.innerHTML = '<p>No studies found. Try adjusting your search or filters.</p>';
-        return;
-    }
-
-    resultsList.innerHTML = data.hits.map(hit => `
-        <article class="result-card">
-            <header>
-                <span class="source-badge source-${hit.source.toLowerCase()}">${hit.source}</span>
-                <h4><a href="${escapeHtml(hit.source_url)}" target="_blank">${escapeHtml(hit.title)}</a></h4>
-            </header>
-            <p class="description">${escapeHtml(hit.description)}</p>
-            <footer>
-                <div class="tags">
-                    ${hit.organisms.map(o => `<span class="tag organism">${escapeHtml(o)}</span>`).join('')}
-                    ${hit.imaging_methods.map(m => `<span class="tag method">${escapeHtml(m)}</span>`).join('')}
-                </div>
-                ${hit.release_date ? `<small class="date">${hit.release_date}</small>` : ''}
-            </footer>
-        </article>
-    `).join('');
-}
-
-function renderFacets(facets) {
-    renderFacetGroup('facet-sources', facets.sources, 'source', state.sources);
-    renderFacetGroup('facet-organisms', facets.organisms, 'organism', state.organisms);
-    renderFacetGroup('facet-methods', facets.imaging_methods, 'method', state.methods);
-    renderFacetGroup('facet-years', facets.years, 'year', []);
-}
-
-function renderFacetGroup(containerId, buckets, type, selected) {
-    const container = document.getElementById(containerId);
-
-    if (buckets.length === 0) {
-        container.innerHTML = '<small>No options available</small>';
-        return;
-    }
-
-    if (type === 'year') {
-        // Render year range selector
-        const years = buckets.map(b => parseInt(b.key)).filter(y => !isNaN(y)).sort();
-        if (years.length === 0) {
-            container.innerHTML = '<small>No years available</small>';
-            return;
-        }
-        const minYear = years[0];
-        const maxYear = years[years.length - 1];
-
-        container.innerHTML = `
-            <div class="year-range">
-                <input type="number" id="year-from" placeholder="${minYear}" min="${minYear}" max="${maxYear}" value="${state.yearFrom || ''}">
-                <span>to</span>
-                <input type="number" id="year-to" placeholder="${maxYear}" min="${minYear}" max="${maxYear}" value="${state.yearTo || ''}">
-                <button type="button" onclick="applyYearFilter()">Apply</button>
+        resultsList.innerHTML = `
+            <div class="empty-state">
+                <p>No studies found matching your search.</p>
+                <p>Try adjusting your search terms or filters.</p>
             </div>
         `;
         return;
     }
 
-    container.innerHTML = buckets.slice(0, 15).map(bucket => {
+    resultsList.innerHTML = data.hits.map(hit => renderStudyCard(hit)).join('');
+}
+
+function renderStudyCard(hit) {
+    const sourceClass = hit.source.toLowerCase();
+    const organisms = hit.organisms.slice(0, 3);
+    const methods = hit.imaging_methods.slice(0, 3);
+
+    return `
+        <article class="study-card">
+            <div class="study-card-header">
+                <span class="source-badge ${sourceClass}">${escapeHtml(hit.source)}</span>
+                <div class="study-card-title">
+                    <h3>
+                        <a href="${escapeHtml(hit.source_url)}" target="_blank" rel="noopener">
+                            ${escapeHtml(hit.title)}
+                        </a>
+                    </h3>
+                    <svg class="external-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                        <polyline points="15 3 21 3 21 9"/>
+                        <line x1="10" y1="14" x2="21" y2="3"/>
+                    </svg>
+                </div>
+            </div>
+            <p class="study-description">${escapeHtml(hit.description)}</p>
+            <div class="study-meta">
+                ${hit.release_date ? `
+                    <span class="study-meta-item">
+                        <span class="study-meta-label">Release date:</span>
+                        ${escapeHtml(hit.release_date)}
+                    </span>
+                ` : ''}
+                ${methods.length > 0 ? `
+                    <span class="study-meta-item">
+                        <span class="study-meta-label">Imaging method:</span>
+                        ${escapeHtml(methods.join(', '))}${hit.imaging_methods.length > 3 ? '...' : ''}
+                    </span>
+                ` : ''}
+                ${organisms.length > 0 ? `
+                    <span class="study-meta-item">
+                        <span class="study-meta-label">Organism:</span>
+                        ${escapeHtml(organisms.join(', '))}${hit.organisms.length > 3 ? '...' : ''}
+                    </span>
+                ` : ''}
+            </div>
+            ${(organisms.length > 0 || methods.length > 0) ? `
+                <div class="study-tags">
+                    ${organisms.map(o => `<span class="tag organism">${escapeHtml(o)}</span>`).join('')}
+                    ${methods.map(m => `<span class="tag method">${escapeHtml(m)}</span>`).join('')}
+                </div>
+            ` : ''}
+        </article>
+    `;
+}
+
+function renderFacets(facets) {
+    renderFacetGroup('facet-sources', facets.sources, 'source', state.sources, 'sources-count');
+    renderFacetGroup('facet-organisms', facets.organisms, 'organism', state.organisms, 'organisms-count');
+    renderFacetGroup('facet-methods', facets.imaging_methods, 'method', state.methods, 'methods-count');
+    renderYearFacet('facet-years', facets.years, 'years-count');
+}
+
+function renderFacetGroup(containerId, buckets, type, selected, countId) {
+    const container = document.getElementById(containerId);
+    const countEl = document.getElementById(countId);
+
+    if (countEl) {
+        countEl.textContent = buckets.length > 0 ? buckets.length : '';
+    }
+
+    if (buckets.length === 0) {
+        container.innerHTML = '<p class="empty-state" style="padding: 0.5rem 0; font-size: 0.875rem;">No options available</p>';
+        return;
+    }
+
+    const maxItems = 10;
+    const displayBuckets = buckets.slice(0, maxItems);
+
+    container.innerHTML = displayBuckets.map(bucket => {
         const isChecked = selected.includes(bucket.key);
-        const id = `${type}-${bucket.key.replace(/\s+/g, '-')}`;
+        const id = `${type}-${bucket.key.replace(/[^a-zA-Z0-9]/g, '-')}`;
         return `
-            <label class="facet-item">
+            <label class="filter-option">
                 <input type="checkbox" id="${escapeHtml(id)}"
                        ${isChecked ? 'checked' : ''}
-                       onchange="toggleFacet('${type}', '${escapeHtml(bucket.key)}')">
-                <span class="facet-label">${escapeHtml(bucket.key)}</span>
-                <span class="facet-count">${bucket.count}</span>
+                       onchange="toggleFacet('${type}', '${escapeHtml(bucket.key.replace(/'/g, "\\'"))}')">
+                <span class="filter-option-label" title="${escapeHtml(bucket.key)}">${escapeHtml(bucket.key)}</span>
+                <span class="filter-option-count">${bucket.count}</span>
             </label>
         `;
     }).join('');
 
-    if (buckets.length > 15) {
-        container.innerHTML += `<small>${buckets.length - 15} more...</small>`;
+    if (buckets.length > maxItems) {
+        container.innerHTML += `<p style="padding: 0.5rem 0; font-size: 0.75rem; color: var(--text-muted);">${buckets.length - maxItems} more...</p>`;
     }
+}
+
+function renderYearFacet(containerId, buckets, countId) {
+    const container = document.getElementById(containerId);
+    const countEl = document.getElementById(countId);
+
+    if (countEl) {
+        countEl.textContent = buckets.length > 0 ? buckets.length : '';
+    }
+
+    if (buckets.length === 0) {
+        container.innerHTML = '<p class="empty-state" style="padding: 0.5rem 0; font-size: 0.875rem;">No years available</p>';
+        return;
+    }
+
+    const years = buckets.map(b => parseInt(b.key)).filter(y => !isNaN(y)).sort();
+    const minYear = years[0];
+    const maxYear = years[years.length - 1];
+
+    container.innerHTML = `
+        <div class="year-range">
+            <input type="number" id="year-from" placeholder="${minYear}" min="${minYear}" max="${maxYear}" value="${state.yearFrom || ''}">
+            <span>to</span>
+            <input type="number" id="year-to" placeholder="${maxYear}" min="${minYear}" max="${maxYear}" value="${state.yearTo || ''}">
+            <button type="button" onclick="applyYearFilter()">Apply</button>
+        </div>
+    `;
 }
 
 function toggleFacet(type, value) {
@@ -229,9 +310,13 @@ function renderPagination(total) {
 
     pagination.innerHTML = `
         <div class="pagination-controls">
-            <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>Previous</button>
-            <span>Page ${currentPage} of ${totalPages}</span>
-            <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>Next</button>
+            <button onclick="goToPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>
+                Previous
+            </button>
+            <span class="pagination-info">Page ${currentPage} of ${totalPages}</span>
+            <button onclick="goToPage(${currentPage + 1})" ${currentPage >= totalPages ? 'disabled' : ''}>
+                Next
+            </button>
         </div>
     `;
 }

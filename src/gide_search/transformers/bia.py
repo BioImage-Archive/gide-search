@@ -5,12 +5,12 @@ from datetime import date
 import httpx
 
 from ..schema import (
-    Affiliation,
     Author,
     BioSample,
     Funding,
     ImageAcquisition,
     ImagingMethod,
+    Organisation,
     Organism,
     Publication,
     Source,
@@ -43,9 +43,11 @@ class BIATransformer:
             affiliations = []
             for aff in a.get("affiliation", []) or []:
                 affiliations.append(
-                    Affiliation(
-                        name=aff.get("display_name", "Unknown"),
-                        ror_id=aff.get("rorid"),
+                    Organisation(
+                        display_name=aff.get("display_name", "Unknown"),
+                        rorid=aff.get("rorid"),
+                        address=aff.get("address"),
+                        website=aff.get("website"),
                     )
                 )
 

@@ -14,6 +14,12 @@ dependencies = [
     "uvicorn>=0.40.0",
 ]
 
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-httpx>=0.35.0",
+]
+
 [tool.uv]
 package = true
 
@@ -26,3 +32,7 @@ packages = ["src/gide_search"]
 
 [project.scripts]
 gide-search = "gide_search.cli:main"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
