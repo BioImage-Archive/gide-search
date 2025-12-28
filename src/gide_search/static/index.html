@@ -72,16 +72,17 @@
 
     <!-- Breadcrumb -->
     <div class="breadcrumb">
-        <div class="breadcrumb-inner">
-            <a href="/">GIDE Search</a>
+        <div class="breadcrumb-inner" id="breadcrumb-content">
+            <a href="/" onclick="showBrowseView(); return false;">GIDE Search</a>
             <span class="separator">&gt;</span>
-            <span>Browse Studies</span>
+            <span id="breadcrumb-current">Browse Studies</span>
         </div>
     </div>
 
     <!-- Main content -->
     <main class="main-content">
-        <div class="content-wrapper">
+        <!-- Browse View -->
+        <div id="browse-view" class="content-wrapper">
             <!-- Filters sidebar -->
             <aside class="filters-sidebar">
                 <div class="filters-header">
@@ -161,6 +162,109 @@
                 <div id="results-list" class="results-list"></div>
                 <div id="pagination" class="pagination"></div>
             </section>
+        </div>
+
+        <!-- Study Detail View (hidden by default) -->
+        <div id="study-view" class="study-detail-wrapper" style="display: none;">
+            <div class="study-detail">
+                <!-- Header with ID and title -->
+                <div class="study-detail-header">
+                    <div class="study-header-top">
+                        <span id="study-source-badge" class="source-badge"></span>
+                        <h1 id="study-id" class="study-detail-id"></h1>
+                    </div>
+                    <h2 id="study-title" class="study-detail-title"></h2>
+                    <div id="study-identifiers" class="study-identifiers"></div>
+                    <div id="study-authors" class="study-authors"></div>
+                    <div id="study-affiliations" class="study-affiliations"></div>
+                </div>
+
+                <!-- Quick stats -->
+                <div id="study-stats" class="study-stats"></div>
+
+                <!-- Action buttons -->
+                <div class="study-actions">
+                    <a id="study-source-link" href="#" target="_blank" class="btn btn-primary">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                        View original study
+                    </a>
+                </div>
+
+                <!-- Study Information Section -->
+                <section class="study-section">
+                    <h3>Study Information</h3>
+                    <div class="study-info-grid">
+                        <div class="study-info-item">
+                            <span class="study-info-label">Description</span>
+                            <p id="study-description" class="study-info-value"></p>
+                        </div>
+                        <div id="study-keywords-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Keywords</span>
+                            <div id="study-keywords" class="study-keywords"></div>
+                        </div>
+                        <div class="study-info-item">
+                            <span class="study-info-label">License</span>
+                            <p id="study-license" class="study-info-value"></p>
+                        </div>
+                        <div id="study-funding-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Funding</span>
+                            <ul id="study-funding" class="study-funding-list"></ul>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Biological Sample Section -->
+                <section class="study-section">
+                    <h3>Biological Sample</h3>
+                    <div class="study-info-grid">
+                        <div class="study-info-item">
+                            <span class="study-info-label">Organism(s)</span>
+                            <div id="study-organisms" class="study-info-value"></div>
+                        </div>
+                        <div class="study-info-item">
+                            <span class="study-info-label">Sample Type</span>
+                            <p id="study-sample-type" class="study-info-value"></p>
+                        </div>
+                        <div id="study-cell-line-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Cell Line</span>
+                            <p id="study-cell-line" class="study-info-value"></p>
+                        </div>
+                        <div id="study-strain-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Strain</span>
+                            <p id="study-strain" class="study-info-value"></p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Imaging Section -->
+                <section class="study-section">
+                    <h3>Image Acquisition</h3>
+                    <div class="study-info-grid">
+                        <div class="study-info-item">
+                            <span class="study-info-label">Imaging Method(s)</span>
+                            <div id="study-methods" class="study-info-value"></div>
+                        </div>
+                        <div id="study-instruments-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Instruments</span>
+                            <ul id="study-instruments" class="study-info-list"></ul>
+                        </div>
+                        <div id="study-channels-container" class="study-info-item" style="display: none;">
+                            <span class="study-info-label">Channels</span>
+                            <div id="study-channels" class="study-info-value"></div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Publications Section -->
+                <section id="study-publications-section" class="study-section" style="display: none;">
+                    <h3>Publications</h3>
+                    <div id="study-publications" class="study-publications"></div>
+                </section>
+            </div>
         </div>
     </main>
 

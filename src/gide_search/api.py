@@ -181,7 +181,7 @@ def search(
     return parse_es_response(es_response)
 
 
-@app.get("/study/{study_id}")
+@app.get("/api/study/{study_id:path}")
 def get_study(study_id: str) -> dict:
     """Get a single study by ID."""
     result = indexer.es.get(index=indexer.index_name, id=study_id)
@@ -192,6 +192,16 @@ def get_study(study_id: str) -> dict:
 @app.get("/")
 def serve_index() -> FileResponse:
     """Serve the frontend index page."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+# Serve index.html for study detail pages (client-side routing)
+@app.get("/study/{study_id:path}")
+def serve_study_page(study_id: str) -> FileResponse:
+    """Serve the frontend for study detail pages."""
+    # The study_id in the path is for the frontend router
+    # The actual data is fetched via /study/{study_id} API endpoint
+    # We need to distinguish between the API call and the page request
     return FileResponse(STATIC_DIR / "index.html")
 
 

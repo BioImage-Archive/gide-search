@@ -11,6 +11,8 @@ const state = {
     yearFrom: null,
     yearTo: null,
     offset: 0,
+    currentView: 'browse', // 'browse' or 'study'
+    currentStudyId: null,
 };
 
 // DOM Elements
@@ -20,19 +22,28 @@ const resultsCount = document.getElementById('results-count');
 const resultsList = document.getElementById('results-list');
 const pagination = document.getElementById('pagination');
 const clearFiltersBtn = document.getElementById('clear-filters');
+const browseView = document.getElementById('browse-view');
+const studyView = document.getElementById('study-view');
+const breadcrumbCurrent = document.getElementById('breadcrumb-current');
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadStateFromURL();
     setupFilterToggles();
-    performSearch();
+
+    // Check if we're loading a study page
+    const path = window.location.pathname;
+    const studyMatch = path.match(/^\/study\/(.+)$/);
+    if (studyMatch) {
+        state.currentStudyId = decodeURIComponent(studyMatch[1]);
+        showStudyView(state.currentStudyId);
+    } else {
+        performSearch();
+    }
 
     searchForm.addEventListener('submit', handleSearch);
     clearFiltersBtn.addEventListener('click', clearFilters);
-    window.addEventListener('popstate', () => {
-        loadStateFromURL();
-        performSearch();
-    });
+    window.addEventListener('popstate', handlePopState);
 });
 
 function setupFilterToggles() {
@@ -77,8 +88,22 @@ function handleSearch(e) {
     e.preventDefault();
     state.query = searchInput.value;
     state.offset = 0;
+    showBrowseView();
     updateURL();
     performSearch();
+}
+
+function handlePopState() {
+    const path = window.location.pathname;
+    const studyMatch = path.match(/^\/study\/(.+)$/);
+    if (studyMatch) {
+        state.currentStudyId = decodeURIComponent(studyMatch[1]);
+        showStudyView(state.currentStudyId);
+    } else {
+        loadStateFromURL();
+        showBrowseViewWithoutPush();
+        performSearch();
+    }
 }
 
 async function performSearch() {
@@ -140,20 +165,22 @@ function renderStudyCard(hit) {
     const methods = hit.imaging_methods.slice(0, 3);
 
     return `
-        <article class="study-card">
+        <article class="study-card" onclick="openStudy('${escapeHtml(hit.id)}')" style="cursor: pointer;">
             <div class="study-card-header">
                 <span class="source-badge ${sourceClass}">${escapeHtml(hit.source)}</span>
                 <div class="study-card-title">
                     <h3>
-                        <a href="${escapeHtml(hit.source_url)}" target="_blank" rel="noopener">
+                        <a href="/study/${encodeURIComponent(hit.id)}" onclick="event.stopPropagation(); openStudy('${escapeHtml(hit.id)}'); return false;">
                             ${escapeHtml(hit.title)}
                         </a>
                     </h3>
-                    <svg class="external-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/>
-                        <line x1="10" y1="14" x2="21" y2="3"/>
-                    </svg>
+                    <a href="${escapeHtml(hit.source_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="View original study">
+                        <svg class="external-icon" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+                            <polyline points="15 3 21 3 21 9"/>
+                            <line x1="10" y1="14" x2="21" y2="3"/>
+                        </svg>
+                    </a>
                 </div>
             </div>
             <p class="study-description">${escapeHtml(hit.description)}</p>
@@ -335,7 +362,319 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// ============================================
+// Study Detail View Functions
+// ============================================
+
+function openStudy(studyId) {
+    state.currentStudyId = studyId;
+    history.pushState({ studyId }, '', `/study/${encodeURIComponent(studyId)}`);
+    showStudyView(studyId);
+}
+
+function showBrowseView() {
+    state.currentView = 'browse';
+    state.currentStudyId = null;
+    browseView.style.display = '';
+    studyView.style.display = 'none';
+    breadcrumbCurrent.textContent = 'Browse Studies';
+    history.pushState(null, '', getSearchURL());
+}
+
+function showBrowseViewWithoutPush() {
+    state.currentView = 'browse';
+    state.currentStudyId = null;
+    browseView.style.display = '';
+    studyView.style.display = 'none';
+    breadcrumbCurrent.textContent = 'Browse Studies';
+}
+
+function getSearchURL() {
+    const params = new URLSearchParams();
+    if (state.query) params.set('q', state.query);
+    state.sources.forEach(s => params.append('source', s));
+    state.organisms.forEach(o => params.append('organism', o));
+    state.methods.forEach(m => params.append('imaging_method', m));
+    if (state.yearFrom) params.set('year_from', state.yearFrom);
+    if (state.yearTo) params.set('year_to', state.yearTo);
+    if (state.offset > 0) params.set('offset', state.offset);
+    return params.toString() ? `/?${params.toString()}` : '/';
+}
+
+async function showStudyView(studyId) {
+    state.currentView = 'study';
+    browseView.style.display = 'none';
+    studyView.style.display = '';
+
+    // Show loading state
+    document.getElementById('study-title').textContent = 'Loading...';
+    document.getElementById('study-id').textContent = studyId;
+    breadcrumbCurrent.innerHTML = `<a href="/" onclick="showBrowseView(); return false;">Browse Studies</a> <span class="separator">&gt;</span> <span>${escapeHtml(studyId)}</span>`;
+
+    try {
+        const response = await fetch(`/api/study/${encodeURIComponent(studyId)}`);
+        if (!response.ok) throw new Error('Study not found');
+        const study = await response.json();
+        renderStudyDetail(study);
+    } catch (error) {
+        studyView.innerHTML = `
+            <div class="study-detail">
+                <div class="error-message" style="margin: 2rem;">
+                    <p>Error: ${escapeHtml(error.message)}</p>
+                    <p><a href="/" onclick="showBrowseView(); return false;">Return to browse</a></p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+function renderStudyDetail(study) {
+    const sourceClass = study.source.toLowerCase();
+
+    // Header
+    document.getElementById('study-source-badge').className = `source-badge ${sourceClass}`;
+    document.getElementById('study-source-badge').textContent = study.source;
+    document.getElementById('study-id').textContent = study.id;
+    document.getElementById('study-title').textContent = study.title;
+    breadcrumbCurrent.innerHTML = `<a href="/" onclick="showBrowseView(); return false;">Browse Studies</a> <span class="separator">&gt;</span> <span>${escapeHtml(study.id)}</span>`;
+
+    // Identifiers (DOI, dates)
+    let identifiersHtml = '';
+    if (study.release_date) {
+        identifiersHtml += `
+            <span class="study-identifier">
+                <span class="study-identifier-label">Released:</span>
+                <span class="study-identifier-value">${escapeHtml(study.release_date)}</span>
+            </span>
+        `;
+    }
+    if (study.data_doi) {
+        identifiersHtml += `
+            <span class="study-identifier">
+                <span class="study-identifier-label">DOI:</span>
+                <span class="study-identifier-value">
+                    <a href="https://doi.org/${escapeHtml(study.data_doi)}" target="_blank">${escapeHtml(study.data_doi)}</a>
+                </span>
+            </span>
+        `;
+    }
+    document.getElementById('study-identifiers').innerHTML = identifiersHtml;
+
+    // Authors
+    if (study.authors && study.authors.length > 0) {
+        const affiliationsMap = new Map();
+        let affIndex = 1;
+
+        // Collect unique affiliations
+        study.authors.forEach(author => {
+            if (author.affiliations) {
+                author.affiliations.forEach(aff => {
+                    if (!affiliationsMap.has(aff.display_name)) {
+                        affiliationsMap.set(aff.display_name, affIndex++);
+                    }
+                });
+            }
+        });
+
+        const authorsHtml = study.authors.map((author, i) => {
+            let authorHtml = `<span class="study-author">`;
+            authorHtml += `<span class="study-author-name">${escapeHtml(author.name)}</span>`;
+
+            // Add affiliation superscripts
+            if (author.affiliations && author.affiliations.length > 0) {
+                const indices = author.affiliations.map(aff => affiliationsMap.get(aff.display_name));
+                authorHtml += `<sup>${indices.join(',')}</sup>`;
+            }
+
+            // Add ORCID link
+            if (author.orcid) {
+                authorHtml += `
+                    <a href="https://orcid.org/${escapeHtml(author.orcid)}" target="_blank" class="orcid-link" title="ORCID">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="#a6ce39">
+                            <path d="M12 0C5.372 0 0 5.372 0 12s5.372 12 12 12 12-5.372 12-12S18.628 0 12 0zM7.369 4.378c.525 0 .947.431.947.947s-.422.947-.947.947a.95.95 0 0 1-.947-.947c0-.525.422-.947.947-.947zm-.722 3.038h1.444v10.041H6.647V7.416zm3.562 0h3.9c3.712 0 5.344 2.653 5.344 5.025 0 2.578-2.016 5.025-5.325 5.025h-3.919V7.416zm1.444 1.303v7.444h2.297c3.272 0 4.022-2.484 4.022-3.722 0-1.444-.844-3.722-3.919-3.722h-2.4z"/>
+                        </svg>
+                    </a>
+                `;
+            }
+
+            authorHtml += `</span>`;
+            return authorHtml;
+        }).join('<span style="color: rgba(255,255,255,0.5)">, </span>');
+
+        document.getElementById('study-authors').innerHTML = authorsHtml;
+
+        // Affiliations
+        if (affiliationsMap.size > 0) {
+            const affiliationsHtml = Array.from(affiliationsMap.entries()).map(([name, index]) => {
+                return `<span class="study-affiliation"><sup>${index}</sup>${escapeHtml(name)}</span>`;
+            }).join('<span style="color: rgba(255,255,255,0.5)">; </span>');
+            document.getElementById('study-affiliations').innerHTML = affiliationsHtml;
+        } else {
+            document.getElementById('study-affiliations').innerHTML = '';
+        }
+    } else {
+        document.getElementById('study-authors').innerHTML = '';
+        document.getElementById('study-affiliations').innerHTML = '';
+    }
+
+    // Stats
+    let statsHtml = '';
+    if (study.file_count) {
+        statsHtml += `
+            <div class="study-stat">
+                <span class="study-stat-label">Files</span>
+                <span class="study-stat-value">${study.file_count.toLocaleString()}</span>
+            </div>
+        `;
+    }
+    if (study.total_size_bytes) {
+        statsHtml += `
+            <div class="study-stat">
+                <span class="study-stat-label">Total Size</span>
+                <span class="study-stat-value">${formatBytes(study.total_size_bytes)}</span>
+            </div>
+        `;
+    }
+    document.getElementById('study-stats').innerHTML = statsHtml;
+    document.getElementById('study-stats').style.display = statsHtml ? '' : 'none';
+
+    // Source link
+    document.getElementById('study-source-link').href = study.source_url;
+
+    // Description
+    document.getElementById('study-description').textContent = study.description || 'No description available.';
+
+    // Keywords
+    if (study.keywords && study.keywords.length > 0) {
+        document.getElementById('study-keywords-container').style.display = '';
+        document.getElementById('study-keywords').innerHTML = study.keywords.map(k =>
+            `<span class="keyword-tag">${escapeHtml(k)}</span>`
+        ).join('');
+    } else {
+        document.getElementById('study-keywords-container').style.display = 'none';
+    }
+
+    // License
+    document.getElementById('study-license').textContent = study.license || 'Not specified';
+
+    // Funding
+    if (study.funding && study.funding.length > 0) {
+        document.getElementById('study-funding-container').style.display = '';
+        document.getElementById('study-funding').innerHTML = study.funding.map(f => `
+            <li>
+                <span class="funding-funder">${escapeHtml(f.funder)}</span>
+                <span class="funding-grant">Grant: ${escapeHtml(f.grant_id)}</span>
+            </li>
+        `).join('');
+    } else {
+        document.getElementById('study-funding-container').style.display = 'none';
+    }
+
+    // Organisms
+    if (study.biosample && study.biosample.organism) {
+        document.getElementById('study-organisms').innerHTML = study.biosample.organism.map(o => {
+            let html = `<span class="tag organism">${escapeHtml(o.name)}</span>`;
+            if (o.ncbi_taxon_id) {
+                html = `<a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${o.ncbi_taxon_id}" target="_blank">${html}</a>`;
+            }
+            return html;
+        }).join(' ');
+    }
+
+    // Sample type
+    document.getElementById('study-sample-type').textContent = study.biosample?.sample_type || 'Not specified';
+
+    // Cell line
+    if (study.biosample?.cell_line) {
+        document.getElementById('study-cell-line-container').style.display = '';
+        document.getElementById('study-cell-line').textContent = study.biosample.cell_line;
+    } else {
+        document.getElementById('study-cell-line-container').style.display = 'none';
+    }
+
+    // Strain
+    if (study.biosample?.strain) {
+        document.getElementById('study-strain-container').style.display = '';
+        document.getElementById('study-strain').textContent = study.biosample.strain;
+    } else {
+        document.getElementById('study-strain-container').style.display = 'none';
+    }
+
+    // Imaging methods
+    if (study.image_acquisition && study.image_acquisition.methods) {
+        document.getElementById('study-methods').innerHTML = study.image_acquisition.methods.map(m => {
+            let html = `<span class="tag method">${escapeHtml(m.name)}</span>`;
+            if (m.fbbi_id) {
+                const fbbi = m.fbbi_id.replace('FBbi:', '');
+                html = `<a href="http://purl.obolibrary.org/obo/FBbi_${fbbi}" target="_blank" title="${m.fbbi_id}">${html}</a>`;
+            }
+            return html;
+        }).join(' ');
+    }
+
+    // Instruments
+    if (study.image_acquisition?.instruments && study.image_acquisition.instruments.length > 0) {
+        document.getElementById('study-instruments-container').style.display = '';
+        document.getElementById('study-instruments').innerHTML = study.image_acquisition.instruments.map(i =>
+            `<li>${escapeHtml(i)}</li>`
+        ).join('');
+    } else {
+        document.getElementById('study-instruments-container').style.display = 'none';
+    }
+
+    // Channels
+    if (study.image_acquisition?.channels && study.image_acquisition.channels.length > 0) {
+        document.getElementById('study-channels-container').style.display = '';
+        document.getElementById('study-channels').innerHTML = study.image_acquisition.channels.map(c =>
+            `<span class="tag method">${escapeHtml(c)}</span>`
+        ).join(' ');
+    } else {
+        document.getElementById('study-channels-container').style.display = 'none';
+    }
+
+    // Publications
+    if (study.publications && study.publications.length > 0) {
+        document.getElementById('study-publications-section').style.display = '';
+        document.getElementById('study-publications').innerHTML = study.publications.map(pub => {
+            let linksHtml = '';
+            if (pub.doi) {
+                linksHtml += `<a href="https://doi.org/${escapeHtml(pub.doi)}" target="_blank" class="publication-link">DOI: ${escapeHtml(pub.doi)}</a>`;
+            }
+            if (pub.pubmed_id) {
+                linksHtml += `<a href="https://pubmed.ncbi.nlm.nih.gov/${escapeHtml(pub.pubmed_id)}" target="_blank" class="publication-link">PubMed: ${escapeHtml(pub.pubmed_id)}</a>`;
+            }
+            if (pub.pmc_id) {
+                linksHtml += `<a href="https://www.ncbi.nlm.nih.gov/pmc/articles/${escapeHtml(pub.pmc_id)}" target="_blank" class="publication-link">PMC: ${escapeHtml(pub.pmc_id)}</a>`;
+            }
+
+            return `
+                <div class="publication-card">
+                    ${pub.title ? `<div class="publication-title">${escapeHtml(pub.title)}</div>` : ''}
+                    ${pub.authors_name ? `<div class="publication-authors">${escapeHtml(pub.authors_name)}</div>` : ''}
+                    ${pub.year ? `<div class="publication-year">${pub.year}</div>` : ''}
+                    ${linksHtml ? `<div class="publication-links">${linksHtml}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    } else {
+        document.getElementById('study-publications-section').style.display = 'none';
+    }
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
 // Make functions available globally for inline handlers
 window.toggleFacet = toggleFacet;
 window.applyYearFilter = applyYearFilter;
 window.goToPage = goToPage;
+window.openStudy = openStudy;
+window.showBrowseView = showBrowseView;
