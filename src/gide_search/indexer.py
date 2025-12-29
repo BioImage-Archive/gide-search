@@ -209,6 +209,83 @@ class DatasetIndexer:
         result = self.es.count(index=self.index_name)
         return result["count"]
 
+    def _build_text_query(self, query: str) -> dict:
+        """Build a text query that properly searches nested fields."""
+        return {
+            "bool": {
+                "should": [
+                    # Non-nested fields
+                    {
+                        "multi_match": {
+                            "query": query,
+                            "fields": [
+                                "title^3",
+                                "description^2",
+                                "keywords^2",
+                            ],
+                            "type": "best_fields",
+                            "fuzziness": "AUTO",
+                        },
+                    },
+                    # Nested: authors
+                    {
+                        "nested": {
+                            "path": "authors",
+                            "query": {
+                                "match": {
+                                    "authors.name": {
+                                        "query": query,
+                                        "fuzziness": "AUTO",
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    # Nested: organisms (doubly-nested)
+                    {
+                        "nested": {
+                            "path": "biosamples",
+                            "query": {
+                                "nested": {
+                                    "path": "biosamples.organism",
+                                    "query": {
+                                        "multi_match": {
+                                            "query": query,
+                                            "fields": [
+                                                "biosamples.organism.scientific_name",
+                                                "biosamples.organism.common_name",
+                                            ],
+                                            "fuzziness": "AUTO",
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    # Nested: imaging methods (doubly-nested)
+                    {
+                        "nested": {
+                            "path": "image_acquisition_protocols",
+                            "query": {
+                                "nested": {
+                                    "path": "image_acquisition_protocols.methods",
+                                    "query": {
+                                        "match": {
+                                            "image_acquisition_protocols.methods.name": {
+                                                "query": query,
+                                                "fuzziness": "AUTO",
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                ],
+                "minimum_should_match": 1,
+            },
+        }
+
     def search(
         self,
         query: str,
@@ -217,21 +294,7 @@ class DatasetIndexer:
     ) -> dict:
         """Simple full-text search across studies."""
         body = {
-            "query": {
-                "multi_match": {
-                    "query": query,
-                    "fields": [
-                        "title^3",
-                        "description^2",
-                        "keywords^2",
-                        "biosamples.organism.scientific_name",
-                        "image_acquisition_protocols.methods.name",
-                        "authors.name",
-                    ],
-                    "type": "best_fields",
-                    "fuzziness": "AUTO",
-                },
-            },
+            "query": self._build_text_query(query),
             "size": size,
             "from": from_,
         }
@@ -254,23 +317,9 @@ class DatasetIndexer:
         must = []
         filter_clauses = []
 
-        # Text query
+        # Text query - use helper to properly search nested fields
         if query:
-            must.append({
-                "multi_match": {
-                    "query": query,
-                    "fields": [
-                        "title^3",
-                        "description^2",
-                        "keywords^2",
-                        "biosamples.organism.scientific_name",
-                        "image_acquisition_protocols.methods.name",
-                        "authors.name",
-                    ],
-                    "type": "best_fields",
-                    "fuzziness": "AUTO",
-                },
-            })
+            must.append(self._build_text_query(query))
 
         # Source filter
         if sources:
