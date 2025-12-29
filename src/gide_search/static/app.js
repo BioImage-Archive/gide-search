@@ -24,19 +24,25 @@ const pagination = document.getElementById('pagination');
 const clearFiltersBtn = document.getElementById('clear-filters');
 const browseView = document.getElementById('browse-view');
 const studyView = document.getElementById('study-view');
+const helpView = document.getElementById('help-view');
 const breadcrumbCurrent = document.getElementById('breadcrumb-current');
+const inlineHelpBtn = document.getElementById('inline-help-btn');
+const inlineHelpPopup = document.getElementById('inline-help-popup');
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadStateFromURL();
     setupFilterToggles();
+    setupInlineHelp();
 
-    // Check if we're loading a study page
+    // Check which page we're loading
     const path = window.location.pathname;
     const studyMatch = path.match(/^\/study\/(.+)$/);
     if (studyMatch) {
         state.currentStudyId = decodeURIComponent(studyMatch[1]);
         showStudyView(state.currentStudyId);
+    } else if (path === '/help') {
+        showHelpView();
     } else {
         performSearch();
     }
@@ -55,6 +61,39 @@ function setupFilterToggles() {
             section.setAttribute('aria-expanded', !isExpanded);
         });
     });
+}
+
+function setupInlineHelp() {
+    // Toggle popup on button click
+    inlineHelpBtn.addEventListener('click', () => {
+        inlineHelpPopup.classList.toggle('active');
+    });
+
+    // Close on close button click
+    const closeBtn = inlineHelpPopup.querySelector('.inline-help-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+            inlineHelpPopup.classList.remove('active');
+        });
+    }
+
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (!inlineHelpBtn.contains(e.target) && !inlineHelpPopup.contains(e.target)) {
+            inlineHelpPopup.classList.remove('active');
+        }
+    });
+
+    // Handle "View full search guide" link
+    const moreLink = inlineHelpPopup.querySelector('.inline-help-more');
+    if (moreLink) {
+        moreLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            inlineHelpPopup.classList.remove('active');
+            history.pushState(null, '', '/help');
+            showHelpView();
+        });
+    }
 }
 
 function loadStateFromURL() {
@@ -99,6 +138,8 @@ function handlePopState() {
     if (studyMatch) {
         state.currentStudyId = decodeURIComponent(studyMatch[1]);
         showStudyView(state.currentStudyId);
+    } else if (path === '/help') {
+        showHelpView();
     } else {
         loadStateFromURL();
         showBrowseViewWithoutPush();
@@ -385,7 +426,9 @@ function showBrowseView() {
     state.currentStudyId = null;
     browseView.style.display = '';
     studyView.style.display = 'none';
+    helpView.style.display = 'none';
     breadcrumbCurrent.textContent = 'Browse Studies';
+    updateNavActive('browse');
     history.pushState(null, '', getSearchURL());
 }
 
@@ -394,7 +437,23 @@ function showBrowseViewWithoutPush() {
     state.currentStudyId = null;
     browseView.style.display = '';
     studyView.style.display = 'none';
+    helpView.style.display = 'none';
     breadcrumbCurrent.textContent = 'Browse Studies';
+    updateNavActive('browse');
+}
+
+function showHelpView() {
+    state.currentView = 'help';
+    state.currentStudyId = null;
+    browseView.style.display = 'none';
+    studyView.style.display = 'none';
+    helpView.style.display = '';
+    breadcrumbCurrent.innerHTML = '<a href="/" onclick="showBrowseView(); return false;">GIDE Search</a> <span class="separator">&gt;</span> <span>Search Help</span>';
+    updateNavActive('help');
+}
+
+function updateNavActive(view) {
+    document.getElementById('nav-browse').classList.toggle('active', view === 'browse');
 }
 
 function getSearchURL() {
@@ -413,6 +472,8 @@ async function showStudyView(studyId) {
     state.currentView = 'study';
     browseView.style.display = 'none';
     studyView.style.display = '';
+    helpView.style.display = 'none';
+    updateNavActive('browse'); // Study view is part of browse
 
     // Show loading state
     document.getElementById('study-title').textContent = 'Loading...';
@@ -678,3 +739,4 @@ window.applyYearFilter = applyYearFilter;
 window.goToPage = goToPage;
 window.openStudy = openStudy;
 window.showBrowseView = showBrowseView;
+window.showHelpView = showHelpView;

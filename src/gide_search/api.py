@@ -143,9 +143,58 @@ def health_check() -> dict:
     }
 
 
+SEARCH_QUERY_DESCRIPTION = """
+Search query string. Supports two modes:
+
+**Simple search** (default): Just type words to search across all fields including
+title, description, authors, organisms, and imaging methods.
+
+**Advanced Lucene syntax**: Use field names, boolean operators, and special syntax
+for precise queries. Automatically detected when you use operators like AND, OR,
+field:value, quotes, or wildcards.
+
+## Searchable Fields
+
+| Field | Description | Example |
+|-------|-------------|---------|
+| `title` | Study title (boosted 3x) | `title:fluorescence` |
+| `description` | Study description (boosted 2x) | `description:cancer` |
+| `keywords` | Study keywords (boosted 2x) | `keywords:microscopy` |
+| `source` | Data source | `source:BIA` |
+| `authors.name` | Author names | `authors.name:Smith` |
+| `biosamples.organism.scientific_name` | Scientific organism name | `biosamples.organism.scientific_name:"Mus musculus"` |
+| `image_acquisition_protocols.methods.name` | Imaging method | `image_acquisition_protocols.methods.name:confocal` |
+
+## Lucene Query Syntax
+
+| Syntax | Description | Example |
+|--------|-------------|---------|
+| `AND` | Both terms required | `mouse AND brain` |
+| `OR` | Either term | `mouse OR human` |
+| `NOT` | Exclude term | `mouse NOT liver` |
+| `"..."` | Exact phrase | `"confocal microscopy"` |
+| `*` | Wildcard (any chars) | `fluor*` |
+| `?` | Single char wildcard | `m?use` |
+| `~` | Fuzzy search | `flourescence~` |
+| `^N` | Boost term | `cancer^2 tumor` |
+| `[a TO b]` | Range query | `release_date:[2020-01-01 TO 2024-12-31]` |
+| `+` | Must include | `+mouse brain` |
+| `-` | Must exclude | `mouse -liver` |
+| `(...)` | Grouping | `(mouse OR human) AND brain` |
+
+## Examples
+
+- `fluorescence` - Simple search across all fields
+- `title:cancer AND authors.name:Smith` - Studies about cancer by Smith
+- `"Mus musculus" AND confocal` - Mouse studies using confocal
+- `source:BIA AND fluor*` - BIA studies with fluorescence-related terms
+- `description:(brain OR neuron) AND NOT liver` - Brain/neuron studies, excluding liver
+"""
+
+
 @app.get("/search", response_model=SearchResponse)
 def search(
-    q: Annotated[str, Query(description="Search query")] = "",
+    q: Annotated[str, Query(description=SEARCH_QUERY_DESCRIPTION)] = "",
     source: Annotated[
         list[str] | None, Query(description="Filter by source (IDR, SSBD, BIA)")
     ] = None,
@@ -168,6 +217,7 @@ def search(
     Search studies with optional filters.
 
     Returns matching studies along with facet counts for filtering.
+    Supports both simple text search and advanced Lucene query syntax.
     """
     # Convert year to date string
     date_from = f"{year_from}-01-01" if year_from else None
@@ -198,6 +248,13 @@ def get_study(study_id: str) -> dict:
 @app.get("/")
 def serve_index() -> FileResponse:
     """Serve the frontend index page."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
+# Serve index.html for help page (client-side routing)
+@app.get("/help")
+def serve_help_page() -> FileResponse:
+    """Serve the frontend for the search help page."""
     return FileResponse(STATIC_DIR / "index.html")
 
 

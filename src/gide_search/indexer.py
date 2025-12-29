@@ -1,10 +1,26 @@
 """ElasticSearch indexer for imaging dataset data."""
 
 import json
+import re
 from pathlib import Path
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
+
+# Pattern to detect Lucene query syntax
+LUCENE_SYNTAX_PATTERN = re.compile(
+    r"""
+    \b(AND|OR|NOT)\b |     # Boolean operators
+    \w+:\s*\S |            # Field:value syntax
+    [+\-!] |               # Required/prohibited operators
+    \*|\? |                # Wildcards
+    \~\d* |                # Fuzzy/proximity
+    \[.*\sTO\s.*\] |       # Range queries
+    \^[\d.]+ |             # Boosting
+    \"[^\"]+\"             # Quoted phrases (could be intentional)
+    """,
+    re.VERBOSE | re.IGNORECASE,
+)
 
 # Index name
 INDEX_NAME = "gide-datasets"
@@ -209,8 +225,33 @@ class DatasetIndexer:
         result = self.es.count(index=self.index_name)
         return result["count"]
 
-    def _build_text_query(self, query: str) -> dict:
-        """Build a text query that properly searches nested fields."""
+    def _is_lucene_syntax(self, query: str) -> bool:
+        """Detect if query contains Lucene query syntax."""
+        return bool(LUCENE_SYNTAX_PATTERN.search(query))
+
+    def _build_lucene_query(self, query: str) -> dict:
+        """Build a query_string query for Lucene syntax searches."""
+        return {
+            "query_string": {
+                "query": query,
+                "fields": [
+                    "title^3",
+                    "description^2",
+                    "keywords^2",
+                    "source",
+                    "authors.name",
+                    "biosamples.organism.scientific_name",
+                    "biosamples.organism.common_name",
+                    "image_acquisition_protocols.methods.name",
+                ],
+                "default_operator": "AND",
+                "allow_leading_wildcard": False,
+                "analyze_wildcard": True,
+            },
+        }
+
+    def _build_simple_query(self, query: str) -> dict:
+        """Build a simple text query that properly searches nested fields."""
         return {
             "bool": {
                 "should": [
@@ -285,6 +326,12 @@ class DatasetIndexer:
                 "minimum_should_match": 1,
             },
         }
+
+    def _build_text_query(self, query: str) -> dict:
+        """Build a text query, using Lucene syntax if detected."""
+        if self._is_lucene_syntax(query):
+            return self._build_lucene_query(query)
+        return self._build_simple_query(query)
 
     def search(
         self,

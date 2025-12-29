@@ -57,6 +57,36 @@
                         Search
                     </button>
                 </form>
+                <div class="search-help-toggle">
+                    <button type="button" id="inline-help-btn" aria-label="Search tips" title="Search tips">
+                        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"/>
+                            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+                            <line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
+                    </button>
+                    <div class="inline-help-popup" id="inline-help-popup">
+                        <div class="inline-help-header">
+                            <strong>Quick Search Tips</strong>
+                            <button type="button" class="inline-help-close" aria-label="Close">&times;</button>
+                        </div>
+                        <div class="inline-help-content">
+                            <p><strong>Simple search:</strong> Just type words</p>
+                            <ul>
+                                <li><code>mouse brain</code></li>
+                                <li><code>fluorescence microscopy</code></li>
+                            </ul>
+                            <p><strong>Advanced:</strong></p>
+                            <ul>
+                                <li><code>title:cancer</code> - search in title</li>
+                                <li><code>source:BIA</code> - filter by source</li>
+                                <li><code>mouse AND brain</code> - both required</li>
+                                <li><code>fluor*</code> - wildcard</li>
+                            </ul>
+                            <a href="/help" class="inline-help-more">View full search guide</a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
@@ -64,7 +94,7 @@
     <!-- Navigation -->
     <nav class="main-nav">
         <div class="nav-inner">
-            <a href="/" class="nav-link active">Browse</a>
+            <a href="/" class="nav-link active" id="nav-browse">Browse</a>
             <a href="https://founding-gide.eurobioimaging.eu/about-us/" target="_blank" class="nav-link">About</a>
             <a href="/docs" target="_blank" class="nav-link">API</a>
         </div>
@@ -162,6 +192,183 @@
                 <div id="results-list" class="results-list"></div>
                 <div id="pagination" class="pagination"></div>
             </section>
+        </div>
+
+        <!-- Help View (hidden by default) -->
+        <div id="help-view" class="help-wrapper" style="display: none;">
+            <div class="help-content">
+                <h1>Search Help</h1>
+                <p class="help-intro">GIDE Search lets you find studies across IDR, SSBD, and BioImage Archive using simple or advanced search syntax.</p>
+
+                <section class="help-section">
+                    <h2>Simple Search</h2>
+                    <p>Just type words to search across all fields including titles, descriptions, authors, organisms, and imaging methods.</p>
+                    <div class="help-examples">
+                        <div class="help-example">
+                            <code>fluorescence</code>
+                            <span>Find studies mentioning fluorescence</span>
+                        </div>
+                        <div class="help-example">
+                            <code>mouse brain</code>
+                            <span>Find studies about mouse brain (matches both words)</span>
+                        </div>
+                        <div class="help-example">
+                            <code>Abdullah</code>
+                            <span>Find studies by author name</span>
+                        </div>
+                        <div class="help-example">
+                            <code>zebrafish confocal</code>
+                            <span>Find zebrafish studies using confocal microscopy</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="help-section">
+                    <h2>Field-Specific Search</h2>
+                    <p>Target specific fields using <code>field:value</code> syntax.</p>
+                    <table class="help-table">
+                        <thead>
+                            <tr>
+                                <th>Field</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>title</code></td>
+                                <td>Study title</td>
+                                <td><code>title:fluorescence</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>description</code></td>
+                                <td>Study description</td>
+                                <td><code>description:cancer</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>source</code></td>
+                                <td>Data source (IDR, SSBD, BIA)</td>
+                                <td><code>source:BIA</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>keywords</code></td>
+                                <td>Study keywords</td>
+                                <td><code>keywords:microscopy</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="help-section">
+                    <h2>Boolean Operators</h2>
+                    <p>Combine search terms with boolean logic.</p>
+                    <table class="help-table">
+                        <thead>
+                            <tr>
+                                <th>Operator</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>AND</code></td>
+                                <td>Both terms required</td>
+                                <td><code>mouse AND brain</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>OR</code></td>
+                                <td>Either term</td>
+                                <td><code>mouse OR human</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>NOT</code></td>
+                                <td>Exclude term</td>
+                                <td><code>mouse NOT liver</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>(...)</code></td>
+                                <td>Group terms</td>
+                                <td><code>(mouse OR human) AND brain</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="help-section">
+                    <h2>Advanced Syntax</h2>
+                    <table class="help-table">
+                        <thead>
+                            <tr>
+                                <th>Syntax</th>
+                                <th>Description</th>
+                                <th>Example</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><code>"..."</code></td>
+                                <td>Exact phrase</td>
+                                <td><code>"confocal microscopy"</code></td>
+                            </tr>
+                            <tr>
+                                <td><code>*</code></td>
+                                <td>Wildcard (any characters)</td>
+                                <td><code>fluor*</code> matches fluorescence, fluorescent, etc.</td>
+                            </tr>
+                            <tr>
+                                <td><code>?</code></td>
+                                <td>Single character wildcard</td>
+                                <td><code>m?use</code> matches mouse, mause</td>
+                            </tr>
+                            <tr>
+                                <td><code>~</code></td>
+                                <td>Fuzzy search (typo-tolerant)</td>
+                                <td><code>flourescence~</code> finds fluorescence</td>
+                            </tr>
+                            <tr>
+                                <td><code>^N</code></td>
+                                <td>Boost term importance</td>
+                                <td><code>cancer^2 tumor</code></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <section class="help-section">
+                    <h2>Example Queries</h2>
+                    <div class="help-examples">
+                        <div class="help-example">
+                            <code>title:cancer AND source:BIA</code>
+                            <span>Cancer studies from BioImage Archive</span>
+                        </div>
+                        <div class="help-example">
+                            <code>"Mus musculus" AND confocal</code>
+                            <span>Mouse studies using confocal microscopy</span>
+                        </div>
+                        <div class="help-example">
+                            <code>source:IDR AND fluor*</code>
+                            <span>IDR studies with fluorescence-related terms</span>
+                        </div>
+                        <div class="help-example">
+                            <code>(brain OR neuron) AND NOT liver</code>
+                            <span>Brain/neuron studies, excluding liver</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="help-section">
+                    <h2>Using Filters</h2>
+                    <p>In addition to search syntax, you can use the sidebar filters to narrow results by:</p>
+                    <ul class="help-list">
+                        <li><strong>Source:</strong> IDR, SSBD, or BioImage Archive</li>
+                        <li><strong>Organism:</strong> Filter by species (e.g., Mus musculus, Homo sapiens)</li>
+                        <li><strong>Imaging Method:</strong> Filter by technique (e.g., confocal, fluorescence)</li>
+                        <li><strong>Release Year:</strong> Filter by when the study was published</li>
+                    </ul>
+                    <p>Filters combine with your search query using AND logic.</p>
+                </section>
+            </div>
         </div>
 
         <!-- Study Detail View (hidden by default) -->

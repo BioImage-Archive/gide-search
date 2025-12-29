@@ -174,10 +174,14 @@ ul {
 
 /* Search Box */
 .search-box {
-    max-width: 700px;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
 }
 
 .search-box form {
+    flex: 1;
     display: flex;
     gap: var(--space-sm);
     background: rgba(255, 255, 255, 0.1);
@@ -1320,5 +1324,291 @@ ul {
     .study-identifiers {
         flex-direction: column;
         gap: var(--space-sm);
+    }
+}
+
+/* ============================================
+   Inline Search Help (Popup)
+   ============================================ */
+
+.search-help-toggle {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-help-toggle > button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.15);
+    border: none;
+    border-radius: var(--radius-full);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.search-help-toggle > button:hover {
+    background: rgba(255, 255, 255, 0.25);
+    color: white;
+}
+
+.inline-help-popup {
+    display: none;
+    position: absolute;
+    top: calc(100% + var(--space-sm));
+    right: 0;
+    width: 320px;
+    background: var(--bg-white);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 100;
+}
+
+.inline-help-popup.active {
+    display: block;
+}
+
+.inline-help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border-light);
+    background: var(--bg-light);
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+.inline-help-header strong {
+    color: var(--text-primary);
+    font-size: var(--text-sm);
+}
+
+.inline-help-close {
+    background: none;
+    border: none;
+    font-size: 1.25rem;
+    color: var(--text-muted);
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+
+.inline-help-close:hover {
+    color: var(--text-primary);
+}
+
+.inline-help-content {
+    padding: var(--space-md) var(--space-lg);
+    font-size: var(--text-sm);
+}
+
+.inline-help-content p {
+    margin: 0 0 var(--space-xs) 0;
+    color: var(--text-secondary);
+}
+
+.inline-help-content ul {
+    margin: 0 0 var(--space-md) 0;
+    padding-left: var(--space-lg);
+}
+
+.inline-help-content li {
+    margin-bottom: var(--space-xs);
+    color: var(--text-secondary);
+}
+
+.inline-help-content code {
+    background: var(--bg-light);
+    padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs);
+    color: var(--gide-navy);
+}
+
+.inline-help-more {
+    display: block;
+    text-align: center;
+    padding: var(--space-sm);
+    margin-top: var(--space-sm);
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+    color: var(--gide-teal);
+    font-weight: 500;
+    font-size: var(--text-sm);
+}
+
+.inline-help-more:hover {
+    background: var(--gide-teal);
+    color: white;
+}
+
+/* ============================================
+   Help Page Styles
+   ============================================ */
+
+.help-wrapper {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--space-xl) var(--space-lg);
+}
+
+.help-content {
+    background: var(--bg-white);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-light);
+    padding: var(--space-2xl);
+}
+
+.help-content h1 {
+    font-size: var(--text-2xl);
+    color: var(--gide-navy);
+    margin: 0 0 var(--space-md) 0;
+}
+
+.help-intro {
+    font-size: var(--text-lg);
+    color: var(--text-secondary);
+    margin-bottom: var(--space-xl);
+    line-height: 1.6;
+}
+
+.help-section {
+    margin-bottom: var(--space-xl);
+    padding-bottom: var(--space-xl);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.help-section:last-child {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom: none;
+}
+
+.help-section h2 {
+    font-size: var(--text-lg);
+    color: var(--gide-navy);
+    margin: 0 0 var(--space-md) 0;
+}
+
+.help-section > p {
+    color: var(--text-secondary);
+    margin-bottom: var(--space-md);
+    line-height: 1.6;
+}
+
+.help-section code {
+    background: var(--bg-light);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    font-size: 0.9em;
+    color: var(--gide-navy);
+}
+
+/* Help Examples */
+.help-examples {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.help-example {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background: var(--bg-light);
+    border-radius: var(--radius-md);
+}
+
+.help-example code {
+    background: var(--bg-white);
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--radius-sm);
+    font-weight: 500;
+    color: var(--gide-teal-dark);
+    white-space: nowrap;
+}
+
+.help-example span {
+    color: var(--text-secondary);
+    font-size: var(--text-sm);
+}
+
+/* Help Tables */
+.help-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-sm);
+}
+
+.help-table th,
+.help-table td {
+    padding: var(--space-sm) var(--space-md);
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.help-table th {
+    background: var(--bg-light);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.help-table td {
+    color: var(--text-secondary);
+}
+
+.help-table td:first-child {
+    white-space: nowrap;
+}
+
+.help-table td:last-child {
+    color: var(--text-muted);
+}
+
+/* Help List */
+.help-list {
+    margin: var(--space-md) 0;
+    padding-left: var(--space-xl);
+}
+
+.help-list li {
+    margin-bottom: var(--space-sm);
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+.help-list strong {
+    color: var(--text-primary);
+}
+
+/* Responsive Help */
+@media (max-width: 768px) {
+    .help-content {
+        padding: var(--space-lg);
+    }
+
+    .help-example {
+        flex-direction: column;
+        gap: var(--space-xs);
+    }
+
+    .help-table {
+        font-size: var(--text-xs);
+    }
+
+    .help-table th,
+    .help-table td {
+        padding: var(--space-xs) var(--space-sm);
+    }
+
+    .inline-help-popup {
+        width: 280px;
+        right: -50px;
     }
 }
