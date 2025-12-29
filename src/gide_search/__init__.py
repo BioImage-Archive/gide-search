@@ -5,12 +5,12 @@ from .schema import (
     BioSample,
     Funding,
     ImageAcquisitionProtocol,
+    ImagingDatasetSummary,
     ImagingMethod,
     Organisation,
     Organism,
     Publication,
     Source,
-    Study,
 )
 
 __all__ = [
@@ -18,10 +18,10 @@ __all__ = [
     "BioSample",
     "Funding",
     "ImageAcquisitionProtocol",
+    "ImagingDatasetSummary",
     "ImagingMethod",
     "Organisation",
     "Organism",
     "Publication",
     "Source",
-    "Study",
 ]

@@ -9,19 +9,19 @@ from ..schema import (
     BioSample,
     Funding,
     ImageAcquisitionProtocol,
+    ImagingDatasetSummary,
     ImagingMethod,
     Organisation,
     Organism,
     Publication,
     Source,
-    Study,
 )
 
 BIA_API_URL = "https://alpha.bioimagearchive.org/search/search/fts"
 
 
 class BIATransformer:
-    """Transform BioImage Archive API data to unified Study schema."""
+    """Transform BioImage Archive API data to unified ImagingDatasetSummary schema."""
 
     def __init__(self, page_size: int = 50):
         self.page_size = page_size
@@ -150,8 +150,8 @@ class BIATransformer:
 
         return (total_files or None, total_size or None)
 
-    def transform_hit(self, hit: dict) -> Study | None:
-        """Transform a single BIA API hit to a Study object."""
+    def transform_hit(self, hit: dict) -> ImagingDatasetSummary | None:
+        """Transform a single BIA API hit to an ImagingDatasetSummary object."""
         source = hit.get("_source", {})
 
         accession_id = source.get("accession_id", "")
@@ -179,7 +179,7 @@ class BIATransformer:
         # Get DOI
         data_doi = source.get("doi")
 
-        return Study(
+        return ImagingDatasetSummary(
             id=f"bia:{accession_id}",
             source=Source.BIA,
             source_url=f"https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession_id}",
@@ -217,8 +217,8 @@ class BIATransformer:
         data = response.json()
         return data.get("hits", {}).get("hits", [])
 
-    def transform_all(self, query: str = "", page_size: int | None = None) -> list[Study]:
-        """Fetch and transform studies from BIA API."""
+    def transform_all(self, query: str = "", page_size: int | None = None) -> list[ImagingDatasetSummary]:
+        """Fetch and transform datasets from BIA API."""
         hits = self.fetch_studies(query, page_size)
         studies = []
 

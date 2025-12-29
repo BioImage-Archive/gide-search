@@ -88,8 +88,11 @@ class ImageAcquisitionProtocol(BaseModel):
     imaging_instrument_description: str | None = Field(default=None, description="Description of instruments used")
 
 
-class Study(BaseModel):
-    """Unified study metadata schema.
+class ImagingDatasetSummary(BaseModel):
+    """Unified imaging dataset summary schema.
+
+    Provides high-level summary information about imaging datasets,
+    not detailed image-level information.
 
     Core fields are required and present in all sources.
     Extended fields are optional and vary by source.

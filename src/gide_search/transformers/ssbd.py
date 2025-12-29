@@ -9,11 +9,11 @@ from rdflib.namespace import RDF, RDFS
 from ..schema import (
     BioSample,
     ImageAcquisitionProtocol,
+    ImagingDatasetSummary,
     ImagingMethod,
     Organism,
     Publication,
     Source,
-    Study,
 )
 
 # SSBD namespaces
@@ -22,7 +22,7 @@ OBO = Namespace("http://purl.obolibrary.org/obo/")
 
 
 class SSBDTransformer:
-    """Transform SSBD ontology data to unified Study schema."""
+    """Transform SSBD ontology data to unified ImagingDatasetSummary schema."""
 
     def __init__(self, ttl_path: Path | str):
         self.graph = Graph()
@@ -199,8 +199,8 @@ class SSBDTransformer:
             return uri_str.split("/")[-1]
         return uri_str
 
-    def transform_all(self) -> list[Study]:
-        """Transform all SSBD datasets to Study objects."""
+    def transform_all(self) -> list[ImagingDatasetSummary]:
+        """Transform all SSBD datasets to ImagingDatasetSummary objects."""
         studies = []
 
         # Find all SSBD_dataset instances
@@ -211,8 +211,8 @@ class SSBDTransformer:
 
         return studies
 
-    def transform_dataset(self, dataset_uri: URIRef) -> Study | None:
-        """Transform a single SSBD dataset to a Study."""
+    def transform_dataset(self, dataset_uri: URIRef) -> ImagingDatasetSummary | None:
+        """Transform a single SSBD dataset to an ImagingDatasetSummary."""
         dataset_id = self._get_dataset_id(dataset_uri)
 
         # Get title
@@ -250,7 +250,7 @@ class SSBDTransformer:
             except (ValueError, IndexError):
                 pass
 
-        return Study(
+        return ImagingDatasetSummary(
             id=f"ssbd:{dataset_id}",
             source=Source.SSBD,
             source_url=source_url,

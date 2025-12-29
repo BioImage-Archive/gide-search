@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from .indexer import StudyIndexer
+from .indexer import DatasetIndexer
 
 STATIC_DIR = Path(__file__).parent / "static"
 
@@ -22,7 +22,7 @@ app = FastAPI(
 # Initialize indexer from environment or defaults
 ES_URL = os.environ.get("ES_URL", "http://localhost:9200")
 ES_API_KEY = os.environ.get("ES_API_KEY")
-indexer = StudyIndexer(es_url=ES_URL, api_key=ES_API_KEY)
+indexer = DatasetIndexer(es_url=ES_URL, api_key=ES_API_KEY)
 
 
 class FacetBucket(BaseModel):

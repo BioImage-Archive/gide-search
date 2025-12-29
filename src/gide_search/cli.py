@@ -5,8 +5,8 @@ from pathlib import Path
 
 import typer
 
-from .indexer import StudyIndexer
-from .schema import Study
+from .indexer import DatasetIndexer
+from .schema import ImagingDatasetSummary
 from .transformers import BIATransformer, IDRTransformer, SSBDTransformer
 
 app = typer.Typer(
@@ -15,12 +15,12 @@ app = typer.Typer(
 )
 
 
-def write_studies(studies: list[Study], output_path: Path) -> None:
-    """Write studies to JSON file."""
+def write_datasets(datasets: list[ImagingDatasetSummary], output_path: Path) -> None:
+    """Write datasets to JSON file."""
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with open(output_path, "w") as f:
         json.dump(
-            [s.model_dump(mode="json") for s in studies],
+            [d.model_dump(mode="json") for d in datasets],
             f,
             indent=2,
             default=str,
@@ -47,7 +47,7 @@ def transform_ssbd(
     typer.echo("Transforming datasets...")
     studies = transformer.transform_all()
 
-    write_studies(studies, output_path)
+    write_datasets(studies, output_path)
     typer.echo(f"Wrote {len(studies)} studies to {output_path}")
 
 
@@ -74,7 +74,7 @@ def transform_idr(
     typer.echo("Transforming studies...")
     studies = transformer.transform_all()
 
-    write_studies(studies, output_path)
+    write_datasets(studies, output_path)
     typer.echo(f"Wrote {len(studies)} studies to {output_path}")
 
 
@@ -97,7 +97,7 @@ def transform_bia(
 
     studies = transformer.transform_all()
 
-    write_studies(studies, output_path)
+    write_datasets(studies, output_path)
     typer.echo(f"Wrote {len(studies)} studies to {output_path}")
 
 
@@ -139,7 +139,7 @@ def transform_all(
         typer.echo(f"Transforming SSBD from {ssbd_path}...")
         transformer = SSBDTransformer(ssbd_path)
         studies = transformer.transform_all()
-        write_studies(studies, output_dir / "ssbd.json")
+        write_datasets(studies, output_dir /"ssbd.json")
         typer.echo(f"  → {len(studies)} SSBD studies")
         total += len(studies)
 
@@ -147,7 +147,7 @@ def transform_all(
         typer.echo(f"Transforming IDR from {idr_path}...")
         transformer = IDRTransformer(idr_path)
         studies = transformer.transform_all()
-        write_studies(studies, output_dir / "idr.json")
+        write_datasets(studies, output_dir /"idr.json")
         typer.echo(f"  → {len(studies)} IDR studies")
         total += len(studies)
 
@@ -155,7 +155,7 @@ def transform_all(
         typer.echo(f"Fetching {bia_page_size} studies from BIA API...")
         transformer = BIATransformer(page_size=bia_page_size)
         studies = transformer.transform_all()
-        write_studies(studies, output_dir / "bia.json")
+        write_datasets(studies, output_dir /"bia.json")
         typer.echo(f"  → {len(studies)} BIA studies")
         total += len(studies)
 
@@ -235,7 +235,7 @@ def index(
     ),
 ) -> None:
     """Index study data into ElasticSearch."""
-    indexer = StudyIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatasetIndexer(es_url=es_url, api_key=api_key)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)
@@ -272,7 +272,7 @@ def search(
     ),
 ) -> None:
     """Search indexed studies."""
-    indexer = StudyIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatasetIndexer(es_url=es_url, api_key=api_key)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)
@@ -306,7 +306,7 @@ def aggregations(
     ),
 ) -> None:
     """Show aggregations across indexed studies."""
-    indexer = StudyIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatasetIndexer(es_url=es_url, api_key=api_key)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)

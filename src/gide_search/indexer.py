@@ -1,4 +1,4 @@
-"""ElasticSearch indexer for study data."""
+"""ElasticSearch indexer for imaging dataset data."""
 
 import json
 from pathlib import Path
@@ -7,9 +7,9 @@ from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
 # Index name
-INDEX_NAME = "gide-studies"
+INDEX_NAME = "gide-datasets"
 
-# ElasticSearch mapping for Study documents
+# ElasticSearch mapping for ImagingDatasetSummary documents
 INDEX_MAPPING = {
     "mappings": {
         "properties": {
@@ -128,8 +128,8 @@ INDEX_MAPPING = {
 }
 
 
-class StudyIndexer:
-    """Index study documents into ElasticSearch."""
+class DatasetIndexer:
+    """Index imaging dataset documents into ElasticSearch."""
 
     def __init__(
         self,

@@ -9,16 +9,16 @@ from ..schema import (
     Author,
     BioSample,
     ImageAcquisitionProtocol,
+    ImagingDatasetSummary,
     ImagingMethod,
     Organism,
     Publication,
     Source,
-    Study,
 )
 
 
 class IDRTransformer:
-    """Transform IDR study metadata files to unified Study schema."""
+    """Transform IDR study metadata files to unified ImagingDatasetSummary schema."""
 
     def __init__(self, idr_repo_path: Path | str):
         self.repo_path = Path(idr_repo_path)
@@ -128,8 +128,8 @@ class IDRTransformer:
 
         return publications
 
-    def transform_study(self, study_file: Path) -> Study | None:
-        """Transform a single IDR study file to a Study object."""
+    def transform_study(self, study_file: Path) -> ImagingDatasetSummary | None:
+        """Transform a single IDR study file to an ImagingDatasetSummary object."""
         data = self._parse_study_file(study_file)
 
         if not data:
@@ -193,7 +193,7 @@ class IDRTransformer:
         # Extract publications
         publications = self._parse_publications(data)
 
-        return Study(
+        return ImagingDatasetSummary(
             id=f"idr:{study_id}",
             source=Source.IDR,
             source_url=f"https://idr.openmicroscopy.org/search/?query=Name:{study_id}",
@@ -216,8 +216,8 @@ class IDRTransformer:
         """Find all study.txt files in the IDR repo."""
         return list(self.repo_path.glob("idr*/*-study.txt"))
 
-    def transform_all(self) -> list[Study]:
-        """Transform all IDR studies to Study objects."""
+    def transform_all(self) -> list[ImagingDatasetSummary]:
+        """Transform all IDR studies to ImagingDatasetSummary objects."""
         studies = []
         for study_file in self.find_study_files():
             study = self.transform_study(study_file)
