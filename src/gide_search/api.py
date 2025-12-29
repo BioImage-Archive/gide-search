@@ -53,6 +53,8 @@ class StudyHit(BaseModel):
     organisms: list[str]
     imaging_methods: list[str]
     release_date: str | None
+    file_count: int | None
+    total_size_bytes: int | None
 
 
 class SearchResponse(BaseModel):
@@ -90,6 +92,8 @@ def parse_es_response(es_response: dict) -> SearchResponse:
                 organisms=organisms,
                 imaging_methods=methods,
                 release_date=src.get("release_date"),
+                file_count=src.get("file_count"),
+                total_size_bytes=src.get("total_size_bytes"),
             )
         )
 

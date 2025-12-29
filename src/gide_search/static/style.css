@@ -610,12 +610,39 @@ ul {
     font-weight: 500;
 }
 
+/* Card Footer */
+.study-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: var(--space-md);
+    margin-top: var(--space-md);
+    flex-wrap: nowrap;
+}
+
 /* Tags */
 .study-tags {
     display: flex;
     flex-wrap: wrap;
     gap: var(--space-xs);
-    margin-top: var(--space-md);
+    flex: 1;
+    min-width: 0;
+}
+
+/* Size Info */
+.study-size-info {
+    display: flex;
+    gap: var(--space-sm);
+    font-size: var(--text-xs);
+    color: var(--text-muted);
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.study-size-info .size-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .tag {

@@ -204,12 +204,20 @@ function renderStudyCard(hit) {
                     </span>
                 ` : ''}
             </div>
-            ${(organisms.length > 0 || methods.length > 0) ? `
-                <div class="study-tags">
-                    ${organisms.map(o => `<span class="tag organism">${escapeHtml(o)}</span>`).join('')}
-                    ${methods.map(m => `<span class="tag method">${escapeHtml(m)}</span>`).join('')}
-                </div>
-            ` : ''}
+            <div class="study-card-footer">
+                ${(organisms.length > 0 || methods.length > 0) ? `
+                    <div class="study-tags">
+                        ${organisms.map(o => `<span class="tag organism">${escapeHtml(o)}</span>`).join('')}
+                        ${methods.map(m => `<span class="tag method">${escapeHtml(m)}</span>`).join('')}
+                    </div>
+                ` : '<div></div>'}
+                ${(hit.file_count || hit.total_size_bytes) ? `
+                    <div class="study-size-info">
+                        ${hit.file_count ? `<span class="size-item">${hit.file_count.toLocaleString()} files</span>` : ''}
+                        ${hit.total_size_bytes ? `<span class="size-item">${formatBytes(hit.total_size_bytes)}</span>` : ''}
+                    </div>
+                ` : ''}
+            </div>
         </article>
     `;
 }
