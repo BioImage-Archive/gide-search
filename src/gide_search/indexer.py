@@ -25,13 +25,18 @@ INDEX_MAPPING = {
             "description": {"type": "text", "analyzer": "english"},
             "license": {"type": "keyword"},
             "release_date": {"type": "date"},
-            # Biosample - nested for complex queries
-            "biosample": {
+            # Biosamples - nested array for complex queries
+            "biosamples": {
+                "type": "nested",
                 "properties": {
                     "organism": {
                         "type": "nested",
                         "properties": {
-                            "name": {
+                            "scientific_name": {
+                                "type": "text",
+                                "fields": {"keyword": {"type": "keyword"}},
+                            },
+                            "common_name": {
                                 "type": "text",
                                 "fields": {"keyword": {"type": "keyword"}},
                             },
@@ -39,13 +44,14 @@ INDEX_MAPPING = {
                         },
                     },
                     "sample_type": {"type": "keyword"},
-                    "biological_entity": {"type": "text"},
+                    "biological_entity_description": {"type": "text"},
                     "strain": {"type": "keyword"},
                     "cell_line": {"type": "keyword"},
                 },
             },
-            # Image acquisition
-            "image_acquisition": {
+            # Image acquisition protocols - nested array
+            "image_acquisition_protocols": {
+                "type": "nested",
                 "properties": {
                     "methods": {
                         "type": "nested",
@@ -57,9 +63,8 @@ INDEX_MAPPING = {
                             "fbbi_id": {"type": "keyword"},
                         },
                     },
-                    "instruments": {"type": "keyword"},
-                    "magnification": {"type": "keyword"},
-                    "channels": {"type": "keyword"},
+                    "protocol_description": {"type": "text"},
+                    "imaging_instrument_description": {"type": "text"},
                 },
             },
             # Publications
@@ -219,8 +224,8 @@ class StudyIndexer:
                         "title^3",
                         "description^2",
                         "keywords^2",
-                        "biosample.organism.name",
-                        "image_acquisition.methods.name",
+                        "biosamples.organism.scientific_name",
+                        "image_acquisition_protocols.methods.name",
                         "authors.name",
                     ],
                     "type": "best_fields",
@@ -258,8 +263,8 @@ class StudyIndexer:
                         "title^3",
                         "description^2",
                         "keywords^2",
-                        "biosample.organism.name",
-                        "image_acquisition.methods.name",
+                        "biosamples.organism.scientific_name",
+                        "image_acquisition_protocols.methods.name",
                         "authors.name",
                     ],
                     "type": "best_fields",
@@ -275,9 +280,9 @@ class StudyIndexer:
         if organisms:
             filter_clauses.append({
                 "nested": {
-                    "path": "biosample.organism",
+                    "path": "biosamples.organism",
                     "query": {
-                        "terms": {"biosample.organism.name.keyword": organisms},
+                        "terms": {"biosamples.organism.scientific_name.keyword": organisms},
                     },
                 },
             })
@@ -286,9 +291,9 @@ class StudyIndexer:
         if imaging_methods:
             filter_clauses.append({
                 "nested": {
-                    "path": "image_acquisition.methods",
+                    "path": "image_acquisition_protocols.methods",
                     "query": {
-                        "terms": {"image_acquisition.methods.name.keyword": imaging_methods},
+                        "terms": {"image_acquisition_protocols.methods.name.keyword": imaging_methods},
                     },
                 },
             })
@@ -322,18 +327,18 @@ class StudyIndexer:
                     "terms": {"field": "source", "size": 10},
                 },
                 "organisms": {
-                    "nested": {"path": "biosample.organism"},
+                    "nested": {"path": "biosamples.organism"},
                     "aggs": {
                         "names": {
-                            "terms": {"field": "biosample.organism.name.keyword", "size": 20},
+                            "terms": {"field": "biosamples.organism.scientific_name.keyword", "size": 20},
                         },
                     },
                 },
                 "imaging_methods": {
-                    "nested": {"path": "image_acquisition.methods"},
+                    "nested": {"path": "image_acquisition_protocols.methods"},
                     "aggs": {
                         "names": {
-                            "terms": {"field": "image_acquisition.methods.name.keyword", "size": 20},
+                            "terms": {"field": "image_acquisition_protocols.methods.name.keyword", "size": 20},
                         },
                     },
                 },
@@ -354,9 +359,9 @@ class StudyIndexer:
         body = {
             "query": {
                 "nested": {
-                    "path": "biosample.organism",
+                    "path": "biosamples.organism",
                     "query": {
-                        "match": {"biosample.organism.name": organism},
+                        "match": {"biosamples.organism.scientific_name": organism},
                     },
                 },
             },
@@ -370,9 +375,9 @@ class StudyIndexer:
         body = {
             "query": {
                 "nested": {
-                    "path": "image_acquisition.methods",
+                    "path": "image_acquisition_protocols.methods",
                     "query": {
-                        "match": {"image_acquisition.methods.name": method},
+                        "match": {"image_acquisition_protocols.methods.name": method},
                     },
                 },
             },
@@ -387,11 +392,11 @@ class StudyIndexer:
             "size": 0,
             "aggs": {
                 "organisms": {
-                    "nested": {"path": "biosample.organism"},
+                    "nested": {"path": "biosamples.organism"},
                     "aggs": {
                         "names": {
                             "terms": {
-                                "field": "biosample.organism.name.keyword",
+                                "field": "biosamples.organism.scientific_name.keyword",
                                 "size": size,
                             },
                         },
@@ -410,11 +415,11 @@ class StudyIndexer:
             "size": 0,
             "aggs": {
                 "methods": {
-                    "nested": {"path": "image_acquisition.methods"},
+                    "nested": {"path": "image_acquisition_protocols.methods"},
                     "aggs": {
                         "names": {
                             "terms": {
-                                "field": "image_acquisition.methods.name.keyword",
+                                "field": "image_acquisition_protocols.methods.name.keyword",
                                 "size": size,
                             },
                         },

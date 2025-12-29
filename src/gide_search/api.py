@@ -70,12 +70,14 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     for hit in es_response.get("hits", {}).get("hits", []):
         src = hit["_source"]
         organisms = [
-            o.get("name", "Unknown")
-            for o in src.get("biosample", {}).get("organism", [])
+            o.get("scientific_name", "Unknown")
+            for bs in src.get("biosamples", [])
+            for o in bs.get("organism", [])
         ]
         methods = [
             m.get("name", "Unknown")
-            for m in src.get("image_acquisition", {}).get("methods", [])
+            for iap in src.get("image_acquisition_protocols", [])
+            for m in iap.get("methods", [])
         ]
         hits.append(
             StudyHit(

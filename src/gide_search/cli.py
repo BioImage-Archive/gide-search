@@ -189,9 +189,10 @@ def stats(
     # Count organisms
     organisms: dict[str, int] = {}
     for s in studies:
-        for org in s.get("biosample", {}).get("organism", []):
-            name = org.get("name", "Unknown")
-            organisms[name] = organisms.get(name, 0) + 1
+        for bs in s.get("biosamples", []):
+            for org in bs.get("organism", []):
+                name = org.get("scientific_name", "Unknown")
+                organisms[name] = organisms.get(name, 0) + 1
 
     typer.echo("\nTop organisms:")
     for org, count in sorted(organisms.items(), key=lambda x: -x[1])[:10]:
@@ -200,9 +201,10 @@ def stats(
     # Count imaging methods
     methods: dict[str, int] = {}
     for s in studies:
-        for m in s.get("image_acquisition", {}).get("methods", []):
-            name = m.get("name", "Unknown")
-            methods[name] = methods.get(name, 0) + 1
+        for iap in s.get("image_acquisition_protocols", []):
+            for m in iap.get("methods", []):
+                name = m.get("name", "Unknown")
+                methods[name] = methods.get(name, 0) + 1
 
     typer.echo("\nTop imaging methods:")
     for method, count in sorted(methods.items(), key=lambda x: -x[1])[:10]:

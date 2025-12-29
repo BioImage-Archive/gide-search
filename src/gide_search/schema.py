@@ -17,7 +17,8 @@ class Source(str, Enum):
 class Organism(BaseModel):
     """Species with optional NCBI Taxonomy identifier."""
 
-    name: str = Field(description="Species name (e.g., 'Homo sapiens')")
+    scientific_name: str = Field(description="Scientific species name (e.g., 'Homo sapiens')")
+    common_name: str | None = Field(default=None, description="Common name (e.g., 'human')")
     ncbi_taxon_id: int | None = Field(default=None, description="NCBI Taxonomy ID (e.g., 9606)")
 
 
@@ -72,20 +73,19 @@ class BioSample(BaseModel):
 
     organism: list[Organism] = Field(description="Species studied")
     sample_type: str = Field(description="Type of sample (cell, tissue, organism)")
-    biological_entity: str | None = Field(
+    biological_entity_description: str | None = Field(
         default=None, description="Specific tissue/cell type studied"
     )
     strain: str | None = Field(default=None, description="Strain name (for model organisms)")
     cell_line: str | None = Field(default=None, description="Cell line name")
 
 
-class ImageAcquisition(BaseModel):
+class ImageAcquisitionProtocol(BaseModel):
     """Imaging methodology and equipment."""
 
     methods: list[ImagingMethod] = Field(description="Imaging techniques used")
-    instruments: list[str] = Field(default_factory=list, description="Specific instruments used")
-    magnification: str | None = None
-    channels: list[str] = Field(default_factory=list, description="Imaging channels/markers")
+    protocol_description: str | None = Field(default=None, description="Description of the imaging protocol")
+    imaging_instrument_description: str | None = Field(default=None, description="Description of instruments used")
 
 
 class Study(BaseModel):
@@ -105,8 +105,10 @@ class Study(BaseModel):
     release_date: date
 
     # Structured objects
-    biosample: BioSample
-    image_acquisition: ImageAcquisition
+    biosamples: list[BioSample] = Field(description="Biological samples used in the study")
+    image_acquisition_protocols: list[ImageAcquisitionProtocol] = Field(
+        description="Image acquisition protocols used in the study"
+    )
     publications: list[Publication] = Field(default_factory=list)
     authors: list[Author] = Field(default_factory=list)
     funding: list[Funding] = Field(default_factory=list)

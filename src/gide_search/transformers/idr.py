@@ -8,7 +8,7 @@ from pathlib import Path
 from ..schema import (
     Author,
     BioSample,
-    ImageAcquisition,
+    ImageAcquisitionProtocol,
     ImagingMethod,
     Organism,
     Publication,
@@ -201,13 +201,13 @@ class IDRTransformer:
             description=description,
             license=license_str,
             release_date=release_date,
-            biosample=BioSample(
-                organism=[Organism(name=organism_name, ncbi_taxon_id=ncbi_taxon_id)],
+            biosamples=[BioSample(
+                organism=[Organism(scientific_name=organism_name, ncbi_taxon_id=ncbi_taxon_id)],
                 sample_type=sample_type,
-            ),
-            image_acquisition=ImageAcquisition(
+            )],
+            image_acquisition_protocols=[ImageAcquisitionProtocol(
                 methods=[ImagingMethod(name=imaging_method, fbbi_id=fbbi_id)],
-            ),
+            )],
             authors=authors,
             publications=publications,
         )

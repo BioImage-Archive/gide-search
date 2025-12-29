@@ -8,7 +8,7 @@ from ..schema import (
     Author,
     BioSample,
     Funding,
-    ImageAcquisition,
+    ImageAcquisitionProtocol,
     ImagingMethod,
     Organisation,
     Organism,
@@ -97,9 +97,9 @@ class BIATransformer:
                     if name not in seen:
                         seen.add(name)
                         # BIA doesn't provide NCBI IDs in this response
-                        organisms.append(Organism(name=name, ncbi_taxon_id=None))
+                        organisms.append(Organism(scientific_name=name, ncbi_taxon_id=None))
 
-        return organisms if organisms else [Organism(name="Unknown")]
+        return organisms if organisms else [Organism(scientific_name="Unknown")]
 
     def _extract_imaging_methods(self, datasets: list[dict]) -> list[ImagingMethod]:
         """Extract imaging methods from dataset acquisition processes."""
@@ -187,13 +187,13 @@ class BIATransformer:
             description=description,
             license=licence,
             release_date=release_date,
-            biosample=BioSample(
+            biosamples=[BioSample(
                 organism=organisms,
                 sample_type=sample_type,
-            ),
-            image_acquisition=ImageAcquisition(
+            )],
+            image_acquisition_protocols=[ImageAcquisitionProtocol(
                 methods=imaging_methods,
-            ),
+            )],
             authors=authors,
             publications=publications,
             funding=funding,

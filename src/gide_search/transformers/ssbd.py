@@ -8,7 +8,7 @@ from rdflib.namespace import RDF, RDFS
 
 from ..schema import (
     BioSample,
-    ImageAcquisition,
+    ImageAcquisitionProtocol,
     ImagingMethod,
     Organism,
     Publication,
@@ -120,20 +120,20 @@ class SSBDTransformer:
             org_name = self._get_literal(org_uri, RDFS.label)
             if not org_name and ncbi_id:
                 org_name = f"NCBITaxon:{ncbi_id}"
-            organisms.append(Organism(name=org_name or "Unknown", ncbi_taxon_id=ncbi_id))
+            organisms.append(Organism(scientific_name=org_name or "Unknown", ncbi_taxon_id=ncbi_id))
 
         # Get strain
         strain_uri = self._get_object(biosample_uri, ONTOLOGY.is_about_strain)
         strain = str(strain_uri) if strain_uri else None
 
         return BioSample(
-            organism=organisms if organisms else [Organism(name="Unknown")],
+            organism=organisms if organisms else [Organism(scientific_name="Unknown")],
             sample_type="unknown",  # SSBD doesn't seem to have this directly
             strain=strain,
         )
 
-    def _parse_imaging_method(self, imaging_uri: URIRef) -> ImageAcquisition:
-        """Parse SSBD_imaging_method_information to ImageAcquisition."""
+    def _parse_imaging_method(self, imaging_uri: URIRef) -> ImageAcquisitionProtocol:
+        """Parse SSBD_imaging_method_information to ImageAcquisitionProtocol."""
         methods = []
 
         # Get imaging method type (FBbi ontology)
@@ -145,13 +145,12 @@ class SSBDTransformer:
                 method_name = fbbi_id
             methods.append(ImagingMethod(name=method_name or "Unknown", fbbi_id=fbbi_id))
 
-        # Get instrument (has_body contains instrument model)
-        instrument = self._get_literal(imaging_uri, ONTOLOGY.has_body)
-        instruments = [instrument] if instrument else []
+        # Get instrument description (has_body contains instrument model)
+        imaging_instrument_description = self._get_literal(imaging_uri, ONTOLOGY.has_body)
 
-        return ImageAcquisition(
+        return ImageAcquisitionProtocol(
             methods=methods if methods else [ImagingMethod(name="Unknown")],
-            instruments=instruments,
+            imaging_instrument_description=imaging_instrument_description,
         )
 
     def _parse_paper(self, paper_uri: URIRef) -> Publication:
@@ -224,13 +223,13 @@ class SSBDTransformer:
         # Get biosample info
         biosample_uri = self._get_object(dataset_uri, ONTOLOGY.has_biosample_information)
         biosample = self._parse_biosample(biosample_uri) if biosample_uri else BioSample(
-            organism=[Organism(name="Unknown")],
+            organism=[Organism(scientific_name="Unknown")],
             sample_type="unknown",
         )
 
         # Get imaging method info
         imaging_uri = self._get_object(dataset_uri, ONTOLOGY.has_imaging_method_total_info)
-        image_acquisition = self._parse_imaging_method(imaging_uri) if imaging_uri else ImageAcquisition(
+        image_acquisition_protocol = self._parse_imaging_method(imaging_uri) if imaging_uri else ImageAcquisitionProtocol(
             methods=[ImagingMethod(name="Unknown")],
         )
 
@@ -259,7 +258,7 @@ class SSBDTransformer:
             description=description,
             license="CC BY 4.0",  # SSBD default license
             release_date=release_date,
-            biosample=biosample,
-            image_acquisition=image_acquisition,
+            biosamples=[biosample],
+            image_acquisition_protocols=[image_acquisition_protocol],
             publications=publications,
         )

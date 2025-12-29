@@ -570,10 +570,11 @@ function renderStudyDetail(study) {
         document.getElementById('study-funding-container').style.display = 'none';
     }
 
-    // Organisms
-    if (study.biosample && study.biosample.organism) {
-        document.getElementById('study-organisms').innerHTML = study.biosample.organism.map(o => {
-            let html = `<span class="tag organism">${escapeHtml(o.name)}</span>`;
+    // Organisms (aggregate from all biosamples)
+    const allOrganisms = (study.biosamples || []).flatMap(bs => bs.organism || []);
+    if (allOrganisms.length > 0) {
+        document.getElementById('study-organisms').innerHTML = allOrganisms.map(o => {
+            let html = `<span class="tag organism">${escapeHtml(o.scientific_name)}</span>`;
             if (o.ncbi_taxon_id) {
                 html = `<a href="https://www.ncbi.nlm.nih.gov/Taxonomy/Browser/wwwtax.cgi?id=${o.ncbi_taxon_id}" target="_blank">${html}</a>`;
             }
@@ -581,28 +582,30 @@ function renderStudyDetail(study) {
         }).join(' ');
     }
 
-    // Sample type
-    document.getElementById('study-sample-type').textContent = study.biosample?.sample_type || 'Not specified';
+    // Sample type (from first biosample)
+    const firstBiosample = study.biosamples?.[0];
+    document.getElementById('study-sample-type').textContent = firstBiosample?.sample_type || 'Not specified';
 
-    // Cell line
-    if (study.biosample?.cell_line) {
+    // Cell line (from first biosample)
+    if (firstBiosample?.cell_line) {
         document.getElementById('study-cell-line-container').style.display = '';
-        document.getElementById('study-cell-line').textContent = study.biosample.cell_line;
+        document.getElementById('study-cell-line').textContent = firstBiosample.cell_line;
     } else {
         document.getElementById('study-cell-line-container').style.display = 'none';
     }
 
-    // Strain
-    if (study.biosample?.strain) {
+    // Strain (from first biosample)
+    if (firstBiosample?.strain) {
         document.getElementById('study-strain-container').style.display = '';
-        document.getElementById('study-strain').textContent = study.biosample.strain;
+        document.getElementById('study-strain').textContent = firstBiosample.strain;
     } else {
         document.getElementById('study-strain-container').style.display = 'none';
     }
 
-    // Imaging methods
-    if (study.image_acquisition && study.image_acquisition.methods) {
-        document.getElementById('study-methods').innerHTML = study.image_acquisition.methods.map(m => {
+    // Imaging methods (aggregate from all protocols)
+    const allMethods = (study.image_acquisition_protocols || []).flatMap(iap => iap.methods || []);
+    if (allMethods.length > 0) {
+        document.getElementById('study-methods').innerHTML = allMethods.map(m => {
             let html = `<span class="tag method">${escapeHtml(m.name)}</span>`;
             if (m.fbbi_id) {
                 const fbbi = m.fbbi_id.replace('FBbi:', '');
@@ -612,24 +615,13 @@ function renderStudyDetail(study) {
         }).join(' ');
     }
 
-    // Instruments
-    if (study.image_acquisition?.instruments && study.image_acquisition.instruments.length > 0) {
+    // Instrument description (from first protocol)
+    const firstProtocol = study.image_acquisition_protocols?.[0];
+    if (firstProtocol?.imaging_instrument_description) {
         document.getElementById('study-instruments-container').style.display = '';
-        document.getElementById('study-instruments').innerHTML = study.image_acquisition.instruments.map(i =>
-            `<li>${escapeHtml(i)}</li>`
-        ).join('');
+        document.getElementById('study-instruments').textContent = firstProtocol.imaging_instrument_description;
     } else {
         document.getElementById('study-instruments-container').style.display = 'none';
-    }
-
-    // Channels
-    if (study.image_acquisition?.channels && study.image_acquisition.channels.length > 0) {
-        document.getElementById('study-channels-container').style.display = '';
-        document.getElementById('study-channels').innerHTML = study.image_acquisition.channels.map(c =>
-            `<span class="tag method">${escapeHtml(c)}</span>`
-        ).join(' ');
-    } else {
-        document.getElementById('study-channels-container').style.display = 'none';
     }
 
     // Publications
