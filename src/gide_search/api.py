@@ -103,12 +103,12 @@ def parse_es_response(es_response: dict) -> SearchResponse:
 
     organisms = [
         FacetBucket(key=b["key"], count=b["doc_count"])
-        for b in aggs.get("organisms", {}).get("names", {}).get("buckets", [])
+        for b in aggs.get("organisms", {}).get("organisms_inner", {}).get("names", {}).get("buckets", [])
     ]
 
     imaging_methods = [
         FacetBucket(key=b["key"], count=b["doc_count"])
-        for b in aggs.get("imaging_methods", {}).get("names", {}).get("buckets", [])
+        for b in aggs.get("imaging_methods", {}).get("methods_inner", {}).get("names", {}).get("buckets", [])
     ]
 
     years = [

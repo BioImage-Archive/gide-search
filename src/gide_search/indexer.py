@@ -276,24 +276,34 @@ class DatasetIndexer:
         if sources:
             filter_clauses.append({"terms": {"source": sources}})
 
-        # Organism filter (nested)
+        # Organism filter (doubly-nested: biosamples > organism)
         if organisms:
             filter_clauses.append({
                 "nested": {
-                    "path": "biosamples.organism",
+                    "path": "biosamples",
                     "query": {
-                        "terms": {"biosamples.organism.scientific_name.keyword": organisms},
+                        "nested": {
+                            "path": "biosamples.organism",
+                            "query": {
+                                "terms": {"biosamples.organism.scientific_name.keyword": organisms},
+                            },
+                        },
                     },
                 },
             })
 
-        # Imaging method filter (nested)
+        # Imaging method filter (doubly-nested: protocols > methods)
         if imaging_methods:
             filter_clauses.append({
                 "nested": {
-                    "path": "image_acquisition_protocols.methods",
+                    "path": "image_acquisition_protocols",
                     "query": {
-                        "terms": {"image_acquisition_protocols.methods.name.keyword": imaging_methods},
+                        "nested": {
+                            "path": "image_acquisition_protocols.methods",
+                            "query": {
+                                "terms": {"image_acquisition_protocols.methods.name.keyword": imaging_methods},
+                            },
+                        },
                     },
                 },
             })
@@ -327,18 +337,28 @@ class DatasetIndexer:
                     "terms": {"field": "source", "size": 10},
                 },
                 "organisms": {
-                    "nested": {"path": "biosamples.organism"},
+                    "nested": {"path": "biosamples"},
                     "aggs": {
-                        "names": {
-                            "terms": {"field": "biosamples.organism.scientific_name.keyword", "size": 20},
+                        "organisms_inner": {
+                            "nested": {"path": "biosamples.organism"},
+                            "aggs": {
+                                "names": {
+                                    "terms": {"field": "biosamples.organism.scientific_name.keyword", "size": 20},
+                                },
+                            },
                         },
                     },
                 },
                 "imaging_methods": {
-                    "nested": {"path": "image_acquisition_protocols.methods"},
+                    "nested": {"path": "image_acquisition_protocols"},
                     "aggs": {
-                        "names": {
-                            "terms": {"field": "image_acquisition_protocols.methods.name.keyword", "size": 20},
+                        "methods_inner": {
+                            "nested": {"path": "image_acquisition_protocols.methods"},
+                            "aggs": {
+                                "names": {
+                                    "terms": {"field": "image_acquisition_protocols.methods.name.keyword", "size": 20},
+                                },
+                            },
                         },
                     },
                 },
@@ -359,9 +379,14 @@ class DatasetIndexer:
         body = {
             "query": {
                 "nested": {
-                    "path": "biosamples.organism",
+                    "path": "biosamples",
                     "query": {
-                        "match": {"biosamples.organism.scientific_name": organism},
+                        "nested": {
+                            "path": "biosamples.organism",
+                            "query": {
+                                "match": {"biosamples.organism.scientific_name": organism},
+                            },
+                        },
                     },
                 },
             },
@@ -375,9 +400,14 @@ class DatasetIndexer:
         body = {
             "query": {
                 "nested": {
-                    "path": "image_acquisition_protocols.methods",
+                    "path": "image_acquisition_protocols",
                     "query": {
-                        "match": {"image_acquisition_protocols.methods.name": method},
+                        "nested": {
+                            "path": "image_acquisition_protocols.methods",
+                            "query": {
+                                "match": {"image_acquisition_protocols.methods.name": method},
+                            },
+                        },
                     },
                 },
             },
@@ -391,13 +421,18 @@ class DatasetIndexer:
         body = {
             "size": 0,
             "aggs": {
-                "organisms": {
-                    "nested": {"path": "biosamples.organism"},
+                "biosamples": {
+                    "nested": {"path": "biosamples"},
                     "aggs": {
-                        "names": {
-                            "terms": {
-                                "field": "biosamples.organism.scientific_name.keyword",
-                                "size": size,
+                        "organisms": {
+                            "nested": {"path": "biosamples.organism"},
+                            "aggs": {
+                                "names": {
+                                    "terms": {
+                                        "field": "biosamples.organism.scientific_name.keyword",
+                                        "size": size,
+                                    },
+                                },
                             },
                         },
                     },
@@ -406,7 +441,7 @@ class DatasetIndexer:
         }
 
         result = self.es.search(index=self.index_name, body=body)
-        buckets = result["aggregations"]["organisms"]["names"]["buckets"]
+        buckets = result["aggregations"]["biosamples"]["organisms"]["names"]["buckets"]
         return [{"name": b["key"], "count": b["doc_count"]} for b in buckets]
 
     def aggregate_imaging_methods(self, size: int = 20) -> list[dict]:
@@ -414,13 +449,18 @@ class DatasetIndexer:
         body = {
             "size": 0,
             "aggs": {
-                "methods": {
-                    "nested": {"path": "image_acquisition_protocols.methods"},
+                "protocols": {
+                    "nested": {"path": "image_acquisition_protocols"},
                     "aggs": {
-                        "names": {
-                            "terms": {
-                                "field": "image_acquisition_protocols.methods.name.keyword",
-                                "size": size,
+                        "methods": {
+                            "nested": {"path": "image_acquisition_protocols.methods"},
+                            "aggs": {
+                                "names": {
+                                    "terms": {
+                                        "field": "image_acquisition_protocols.methods.name.keyword",
+                                        "size": size,
+                                    },
+                                },
                             },
                         },
                     },
@@ -429,7 +469,7 @@ class DatasetIndexer:
         }
 
         result = self.es.search(index=self.index_name, body=body)
-        buckets = result["aggregations"]["methods"]["names"]["buckets"]
+        buckets = result["aggregations"]["protocols"]["methods"]["names"]["buckets"]
         return [{"name": b["key"], "count": b["doc_count"]} for b in buckets]
 
     def aggregate_sources(self) -> list[dict]:
