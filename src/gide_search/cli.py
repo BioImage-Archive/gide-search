@@ -7,7 +7,7 @@ import typer
 
 from .indexer import DatasetIndexer
 from .schema import ImagingDatasetSummary
-from .transformers import BIATransformer, IDRTransformer, SSBDTransformer
+from .transformers import BIATransformer, IDRTransformer, ROCrateTransformer, SSBDTransformer
 
 app = typer.Typer(
     name="gide-search",
@@ -95,6 +95,30 @@ def transform_bia(
     typer.echo(f"Fetching {page_size} studies from BIA API...")
     transformer = BIATransformer(page_size=page_size)
 
+    studies = transformer.transform_all()
+
+    write_datasets(studies, output_path)
+    typer.echo(f"Wrote {len(studies)} studies to {output_path}")
+
+
+@app.command()
+def transform_rocrate(
+    input_path: Path = typer.Argument(
+        ...,
+        help="Path to RO-Crate file or directory containing ro-crate-metadata.json files",
+        exists=True,
+    ),
+    output_path: Path = typer.Option(
+        Path("output/rocrate.json"),
+        "--output", "-o",
+        help="Output JSON file path",
+    ),
+) -> None:
+    """Transform RO-Crate metadata files to unified schema."""
+    typer.echo(f"Loading RO-Crate metadata from {input_path}...")
+    transformer = ROCrateTransformer(input_path)
+
+    typer.echo("Transforming datasets...")
     studies = transformer.transform_all()
 
     write_datasets(studies, output_path)

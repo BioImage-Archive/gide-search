@@ -12,6 +12,7 @@ class Source(str, Enum):
     IDR = "IDR"
     SSBD = "SSBD"
     BIA = "BIA"
+    EXTERNAL = "EXTERNAL"  # For RO-Crate data from unknown publishers
 
 
 class Organism(BaseModel):
