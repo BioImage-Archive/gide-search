@@ -83,9 +83,15 @@
                                 <li><code>mouse AND brain</code> - both required</li>
                                 <li><code>fluor*</code> - wildcard</li>
                             </ul>
-                            <a href="/help" class="inline-help-more">View full search guide</a>
+                            <div class="inline-help-links">
+                                <a href="/help" class="inline-help-more">View full search guide</a>
+                                <a href="/advanced-search" class="inline-help-more" onclick="event.preventDefault(); showAdvancedSearchView();">Advanced search form</a>
+                            </div>
                         </div>
                     </div>
+                </div>
+                <div class="search-links">
+                    <a href="/advanced-search" onclick="event.preventDefault(); showAdvancedSearchView();">Advanced search</a>
                 </div>
             </div>
         </div>
@@ -95,6 +101,8 @@
     <nav class="main-nav">
         <div class="nav-inner">
             <a href="/" class="nav-link active" id="nav-browse">Browse</a>
+            <a href="/advanced-search" class="nav-link" id="nav-advanced" onclick="event.preventDefault(); showAdvancedSearchView();">Advanced Search</a>
+            <a href="/help" class="nav-link" id="nav-help" onclick="event.preventDefault(); history.pushState(null, '', '/help'); showHelpView();">Help</a>
             <a href="https://founding-gide.eurobioimaging.eu/about-us/" target="_blank" class="nav-link">About</a>
             <a href="/docs" target="_blank" class="nav-link">API</a>
         </div>
@@ -199,6 +207,11 @@
             <div class="help-content">
                 <h1>Search Help</h1>
                 <p class="help-intro">GIDE Search lets you find studies across IDR, SSBD, and BioImage Archive using simple or advanced search syntax.</p>
+
+                <div class="help-callout">
+                    <strong>Prefer a form-based approach?</strong>
+                    Try the <a href="/advanced-search" onclick="event.preventDefault(); showAdvancedSearchView();">Advanced Search Form</a> to build complex queries without knowing the syntax.
+                </div>
 
                 <section class="help-section">
                     <h2>Simple Search</h2>
@@ -368,6 +381,145 @@
                     </ul>
                     <p>Filters combine with your search query using AND logic.</p>
                 </section>
+            </div>
+        </div>
+
+        <!-- Advanced Search View (hidden by default) -->
+        <div id="advanced-search-view" class="advanced-search-wrapper" style="display: none;">
+            <div class="advanced-search-content">
+                <div class="advanced-search-header">
+                    <h1>Advanced Search</h1>
+                    <p>Build complex queries without knowing search syntax. Fill in the fields below to search for studies.</p>
+                </div>
+
+                <form id="advanced-search-form" class="advanced-search-form">
+                    <!-- Text Search Section -->
+                    <fieldset class="form-fieldset">
+                        <legend>Text Search</legend>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="adv-title">Title contains</label>
+                                <input type="text" id="adv-title" name="title" class="form-input" placeholder="e.g., fluorescence microscopy">
+                            </div>
+                            <div class="form-group">
+                                <label for="adv-description">Description contains</label>
+                                <input type="text" id="adv-description" name="description" class="form-input" placeholder="e.g., cancer cells">
+                            </div>
+                            <div class="form-group">
+                                <label for="adv-author">Author name</label>
+                                <input type="text" id="adv-author" name="author" class="form-input" placeholder="e.g., Smith">
+                            </div>
+                            <div class="form-group">
+                                <label for="adv-keywords">Keywords</label>
+                                <input type="text" id="adv-keywords" name="keywords" class="form-input" placeholder="e.g., live imaging">
+                            </div>
+                        </div>
+                        <div class="form-group form-group-full">
+                            <label for="adv-any">Search any field</label>
+                            <input type="text" id="adv-any" name="any" class="form-input" placeholder="e.g., zebrafish brain">
+                        </div>
+                    </fieldset>
+
+                    <!-- Filters Section -->
+                    <fieldset class="form-fieldset">
+                        <legend>Filters</legend>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Source</label>
+                                <div class="checkbox-group">
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="source" value="IDR">
+                                        <span>IDR</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="source" value="SSBD">
+                                        <span>SSBD</span>
+                                    </label>
+                                    <label class="checkbox-label">
+                                        <input type="checkbox" name="source" value="BIA">
+                                        <span>BIA</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label for="adv-organism">Organism</label>
+                                <select id="adv-organism" name="organism" class="form-select">
+                                    <option value="">Any organism</option>
+                                    <option value="Homo sapiens">Homo sapiens (Human)</option>
+                                    <option value="Mus musculus">Mus musculus (Mouse)</option>
+                                    <option value="Danio rerio">Danio rerio (Zebrafish)</option>
+                                    <option value="Drosophila melanogaster">Drosophila melanogaster (Fruit fly)</option>
+                                    <option value="Caenorhabditis elegans">Caenorhabditis elegans (Nematode)</option>
+                                    <option value="Saccharomyces cerevisiae">Saccharomyces cerevisiae (Yeast)</option>
+                                    <option value="Arabidopsis thaliana">Arabidopsis thaliana</option>
+                                    <option value="Rattus norvegicus">Rattus norvegicus (Rat)</option>
+                                    <option value="Xenopus laevis">Xenopus laevis (Frog)</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="adv-method">Imaging Method</label>
+                                <select id="adv-method" name="method" class="form-select">
+                                    <option value="">Any method</option>
+                                    <option value="fluorescence microscopy">Fluorescence microscopy</option>
+                                    <option value="confocal microscopy">Confocal microscopy</option>
+                                    <option value="light-sheet microscopy">Light-sheet microscopy</option>
+                                    <option value="two-photon microscopy">Two-photon microscopy</option>
+                                    <option value="super-resolution microscopy">Super-resolution microscopy</option>
+                                    <option value="electron microscopy">Electron microscopy</option>
+                                    <option value="bright-field microscopy">Bright-field microscopy</option>
+                                    <option value="spinning disk confocal">Spinning disk confocal</option>
+                                    <option value="FRET">FRET</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Release Year</label>
+                                <div class="year-range-inputs">
+                                    <input type="number" id="adv-year-from" name="year_from" class="form-input form-input-small" placeholder="From" min="2000" max="2030">
+                                    <span>to</span>
+                                    <input type="number" id="adv-year-to" name="year_to" class="form-input form-input-small" placeholder="To" min="2000" max="2030">
+                                </div>
+                            </div>
+                        </div>
+                    </fieldset>
+
+                    <!-- Options Section -->
+                    <fieldset class="form-fieldset">
+                        <legend>Search Options</legend>
+                        <div class="radio-group">
+                            <label class="radio-label">
+                                <input type="radio" name="match_mode" value="all" checked>
+                                <span>Match <strong>ALL</strong> conditions (AND)</span>
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="match_mode" value="any">
+                                <span>Match <strong>ANY</strong> condition (OR)</span>
+                            </label>
+                        </div>
+                    </fieldset>
+
+                    <!-- Actions -->
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary btn-large">
+                            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            Search
+                        </button>
+                        <button type="reset" class="btn btn-secondary">Clear Form</button>
+                    </div>
+                </form>
+
+                <div class="advanced-search-footer">
+                    <a href="/" class="back-link">
+                        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="m15 18-6-6 6-6"/>
+                        </svg>
+                        Back to simple search
+                    </a>
+                    <span class="separator">|</span>
+                    <a href="/help">View search syntax help</a>
+                </div>
             </div>
         </div>
 

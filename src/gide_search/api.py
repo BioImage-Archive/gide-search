@@ -258,6 +258,13 @@ def serve_help_page() -> FileResponse:
     return FileResponse(STATIC_DIR / "index.html")
 
 
+# Serve index.html for advanced search page (client-side routing)
+@app.get("/advanced-search")
+def serve_advanced_search_page() -> FileResponse:
+    """Serve the frontend for advanced search."""
+    return FileResponse(STATIC_DIR / "index.html")
+
+
 # Serve index.html for study detail pages (client-side routing)
 @app.get("/study/{study_id:path}")
 def serve_study_page(study_id: str) -> FileResponse:

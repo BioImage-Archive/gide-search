@@ -28,12 +28,15 @@ const helpView = document.getElementById('help-view');
 const breadcrumbCurrent = document.getElementById('breadcrumb-current');
 const inlineHelpBtn = document.getElementById('inline-help-btn');
 const inlineHelpPopup = document.getElementById('inline-help-popup');
+const advancedSearchView = document.getElementById('advanced-search-view');
+const advancedSearchForm = document.getElementById('advanced-search-form');
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     loadStateFromURL();
     setupFilterToggles();
     setupInlineHelp();
+    setupAdvancedSearch();
 
     // Check which page we're loading
     const path = window.location.pathname;
@@ -43,6 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showStudyView(state.currentStudyId);
     } else if (path === '/help') {
         showHelpView();
+    } else if (path === '/advanced-search') {
+        showAdvancedSearchView();
     } else {
         performSearch();
     }
@@ -140,6 +145,8 @@ function handlePopState() {
         showStudyView(state.currentStudyId);
     } else if (path === '/help') {
         showHelpView();
+    } else if (path === '/advanced-search') {
+        showAdvancedSearchViewWithoutPush();
     } else {
         loadStateFromURL();
         showBrowseViewWithoutPush();
@@ -427,6 +434,7 @@ function showBrowseView() {
     browseView.style.display = '';
     studyView.style.display = 'none';
     helpView.style.display = 'none';
+    advancedSearchView.style.display = 'none';
     breadcrumbCurrent.textContent = 'Browse Studies';
     updateNavActive('browse');
     history.pushState(null, '', getSearchURL());
@@ -438,6 +446,7 @@ function showBrowseViewWithoutPush() {
     browseView.style.display = '';
     studyView.style.display = 'none';
     helpView.style.display = 'none';
+    advancedSearchView.style.display = 'none';
     breadcrumbCurrent.textContent = 'Browse Studies';
     updateNavActive('browse');
 }
@@ -448,12 +457,15 @@ function showHelpView() {
     browseView.style.display = 'none';
     studyView.style.display = 'none';
     helpView.style.display = '';
+    advancedSearchView.style.display = 'none';
     breadcrumbCurrent.innerHTML = '<a href="/" onclick="showBrowseView(); return false;">GIDE Search</a> <span class="separator">&gt;</span> <span>Search Help</span>';
     updateNavActive('help');
 }
 
 function updateNavActive(view) {
-    document.getElementById('nav-browse').classList.toggle('active', view === 'browse');
+    document.getElementById('nav-browse').classList.toggle('active', view === 'browse' || view === 'study');
+    document.getElementById('nav-advanced').classList.toggle('active', view === 'advanced-search');
+    document.getElementById('nav-help').classList.toggle('active', view === 'help');
 }
 
 function getSearchURL() {
@@ -473,6 +485,7 @@ async function showStudyView(studyId) {
     browseView.style.display = 'none';
     studyView.style.display = '';
     helpView.style.display = 'none';
+    advancedSearchView.style.display = 'none';
     updateNavActive('browse'); // Study view is part of browse
 
     // Show loading state
@@ -733,6 +746,144 @@ function formatBytes(bytes) {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
 }
 
+// ============================================
+// Advanced Search Functions
+// ============================================
+
+function setupAdvancedSearch() {
+    if (!advancedSearchForm) return;
+
+    advancedSearchForm.addEventListener('submit', handleAdvancedSearch);
+
+    const clearBtn = document.getElementById('advanced-search-clear');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', clearAdvancedForm);
+    }
+}
+
+function showAdvancedSearchView() {
+    state.currentView = 'advanced-search';
+    state.currentStudyId = null;
+    browseView.style.display = 'none';
+    studyView.style.display = 'none';
+    helpView.style.display = 'none';
+    advancedSearchView.style.display = '';
+    breadcrumbCurrent.innerHTML = '<a href="/" onclick="showBrowseView(); return false;">GIDE Search</a> <span class="separator">&gt;</span> <span>Advanced Search</span>';
+    updateNavActive('browse');
+    history.pushState(null, '', '/advanced-search');
+}
+
+function showAdvancedSearchViewWithoutPush() {
+    state.currentView = 'advanced-search';
+    state.currentStudyId = null;
+    browseView.style.display = 'none';
+    studyView.style.display = 'none';
+    helpView.style.display = 'none';
+    advancedSearchView.style.display = '';
+    breadcrumbCurrent.innerHTML = '<a href="/" onclick="showBrowseView(); return false;">GIDE Search</a> <span class="separator">&gt;</span> <span>Advanced Search</span>';
+    updateNavActive('browse');
+}
+
+function handleAdvancedSearch(e) {
+    e.preventDefault();
+
+    // Get form values
+    const title = document.getElementById('adv-title')?.value.trim() || '';
+    const description = document.getElementById('adv-description')?.value.trim() || '';
+    const author = document.getElementById('adv-author')?.value.trim() || '';
+    const keywords = document.getElementById('adv-keywords')?.value.trim() || '';
+    const anyField = document.getElementById('adv-any-field')?.value.trim() || '';
+
+    // Get selected sources
+    const sources = [];
+    document.querySelectorAll('input[name="adv-source"]:checked').forEach(cb => {
+        sources.push(cb.value);
+    });
+
+    // Get organism and imaging method
+    const organism = document.getElementById('adv-organism')?.value || '';
+    const imagingMethod = document.getElementById('adv-imaging-method')?.value || '';
+
+    // Get year range
+    const yearFrom = document.getElementById('adv-year-from')?.value || '';
+    const yearTo = document.getElementById('adv-year-to')?.value || '';
+
+    // Get match mode
+    const matchAll = document.querySelector('input[name="adv-match-mode"]:checked')?.value === 'all';
+
+    // Build query parts
+    const queryParts = [];
+
+    if (title) {
+        queryParts.push(`title:${quoteIfNeeded(title)}`);
+    }
+    if (description) {
+        queryParts.push(`description:${quoteIfNeeded(description)}`);
+    }
+    if (author) {
+        queryParts.push(`authors.name:${quoteIfNeeded(author)}`);
+    }
+    if (keywords) {
+        queryParts.push(`keywords:${quoteIfNeeded(keywords)}`);
+    }
+    if (anyField) {
+        queryParts.push(quoteIfNeeded(anyField));
+    }
+
+    // Join query parts with operator
+    const operator = matchAll ? ' AND ' : ' OR ';
+    const query = queryParts.join(operator);
+
+    // Build URL parameters
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+    sources.forEach(s => params.append('source', s));
+    if (organism) params.append('organism', organism);
+    if (imagingMethod) params.append('imaging_method', imagingMethod);
+    if (yearFrom) params.set('year_from', yearFrom);
+    if (yearTo) params.set('year_to', yearTo);
+
+    // Navigate to search results
+    const url = params.toString() ? `/?${params.toString()}` : '/';
+    window.location.href = url;
+}
+
+function quoteIfNeeded(value) {
+    // Quote the value if it contains spaces or special characters
+    if (value.includes(' ') || /[+\-&|!(){}[\]^"~*?:\\]/.test(value)) {
+        // Escape any existing quotes and wrap in quotes
+        return `"${value.replace(/"/g, '\\"')}"`;
+    }
+    return value;
+}
+
+function clearAdvancedForm() {
+    if (!advancedSearchForm) return;
+
+    // Clear text inputs
+    document.getElementById('adv-title').value = '';
+    document.getElementById('adv-description').value = '';
+    document.getElementById('adv-author').value = '';
+    document.getElementById('adv-keywords').value = '';
+    document.getElementById('adv-any-field').value = '';
+
+    // Clear source checkboxes
+    document.querySelectorAll('input[name="adv-source"]').forEach(cb => {
+        cb.checked = false;
+    });
+
+    // Reset dropdowns
+    document.getElementById('adv-organism').value = '';
+    document.getElementById('adv-imaging-method').value = '';
+
+    // Clear year inputs
+    document.getElementById('adv-year-from').value = '';
+    document.getElementById('adv-year-to').value = '';
+
+    // Reset to match all
+    document.querySelector('input[name="adv-match-mode"][value="all"]').checked = true;
+}
+
 // Make functions available globally for inline handlers
 window.toggleFacet = toggleFacet;
 window.applyYearFilter = applyYearFilter;
@@ -740,3 +891,4 @@ window.goToPage = goToPage;
 window.openStudy = openStudy;
 window.showBrowseView = showBrowseView;
 window.showHelpView = showHelpView;
+window.showAdvancedSearchView = showAdvancedSearchView;
