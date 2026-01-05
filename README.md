@@ -9,6 +9,7 @@ A unified search system for biological imaging databases. Aggregates study-level
 | **IDR** | Image Data Resource - curated reference datasets | Local TSV files (from [idr-metadata](https://github.com/IDR/idr-metadata)) |
 | **SSBD** | Systems Science of Biological Dynamics | RDF/TTL ontology files |
 | **BIA** | BioImage Archive | REST API |
+| **RO-Crate** | External databases providing standardized metadata | JSON-LD ([RO-Crate 1.1](https://www.researchobject.org/ro-crate/1.1/)) |
 
 ## Installation
 
@@ -16,6 +17,63 @@ Requires Python 3.14+ and [uv](https://docs.astral.sh/uv/).
 
 ```bash
 uv sync
+```
+
+## Data Source Setup
+
+### IDR (Image Data Resource)
+
+Clone the IDR metadata repository into the `resources/` directory:
+
+```bash
+git clone https://github.com/IDR/idr-metadata.git resources/idr
+```
+
+This provides study.txt files for each IDR study containing metadata in TSV format.
+
+### SSBD (Systems Science of Biological Dynamics)
+
+Download the SSBD ontology files:
+
+```bash
+mkdir -p resources/ssbd
+curl -o resources/ssbd/ssbd_instances.ttl \
+  https://ssbd.riken.jp/ontology/ssbd_instances.ttl
+curl -o resources/ssbd/ssbd_meta.ttl \
+  https://ssbd.riken.jp/ontology/ssbd_meta.ttl
+```
+
+### BIA (BioImage Archive)
+
+No setup required - data is fetched directly from the BIA REST API.
+
+### RO-Crate (External Sources)
+
+For indexing external databases that provide RO-Crate metadata:
+
+```bash
+# Transform single file
+uv run gide-search transform-rocrate path/to/ro-crate-metadata.json
+
+# Transform directory of crates
+uv run gide-search transform-rocrate path/to/crates/
+
+# See example template
+cat resources/rocrate/example-template/README.md
+```
+
+### ElasticSearch (Required for Indexing/Search)
+
+A local ElasticSearch instance is required for indexing and searching. See [Local Infrastructure](#local-infrastructure) for setup instructions.
+
+**Quick start (macOS with colima):**
+
+```bash
+colima start
+docker run -d --name elasticsearch -p 9200:9200 \
+  -e "discovery.type=single-node" \
+  -e "xpack.security.enabled=false" \
+  docker.elastic.co/elasticsearch/elasticsearch:8.11.0
 ```
 
 ## Quick Start
@@ -49,6 +107,10 @@ uv run gide-search transform-idr resources/idr
 
 # BIA - fetches from API (default 50 studies)
 uv run gide-search transform-bia -n 100
+
+# RO-Crate - from local files or directory
+uv run gide-search transform-rocrate path/to/ro-crate-metadata.json
+uv run gide-search transform-rocrate path/to/crates/
 
 # All sources at once
 uv run gide-search transform-all --ssbd <path> --idr <path> --bia
@@ -93,18 +155,18 @@ uv run gide-search aggregations
 ```
 +-------------------------------------------------------------------+
 |                        Data Sources                               |
-+------------------+------------------+-----------------------------+
-|   SSBD (TTL)     |   IDR (TSV)      |   BIA (REST API)            |
-+--------+---------+--------+---------+-------------+---------------+
-         |                  |                       |
-         v                  v                       v
++-------------+-------------+----------------+----------------------+
+| SSBD (TTL)  | IDR (TSV)   | BIA (REST API) | RO-Crate (JSON-LD)   |
++------+------+------+------+-------+--------+-----------+----------+
+       |             |              |                    |
+       v             v              v                    v
 +-------------------------------------------------------------------+
 |                     Transformers                                  |
-|  SSBDTransformer  |  IDRTransformer  |  BIATransformer            |
-|    (rdflib)       |   (TSV parsing)  |     (httpx)                |
-+--------+---------------------+------------------------+-----------+
-         |                     |                        |
-         v                     v                        v
+| SSBDTransformer | IDRTransformer | BIATransformer | ROCrate       |
+|   (rdflib)      |  (TSV parsing) |    (httpx)     | Transformer   |
++-------+------------------+----------------+---------------+-------+
+        |                  |                |               |
+        v                  v                v               v
 +-------------------------------------------------------------------+
 |                    Unified Schema (Pydantic)                      |
 |                                                                   |
@@ -156,7 +218,7 @@ The schema normalizes metadata across sources while preserving source-specific d
 | Field | Type | Description |
 |-------|------|-------------|
 | `id` | string | Prefixed identifier (e.g., `idr:idr0164`, `ssbd:000479`, `bia:S-BIAD2455`) |
-| `source` | enum | `IDR`, `SSBD`, `BIA` |
+| `source` | enum | `IDR`, `SSBD`, `BIA`, `EXTERNAL` |
 | `source_url` | string | Link to original study page |
 | `title` | string | Study title |
 | `description` | string | Study description |
@@ -198,17 +260,21 @@ src/gide_search/
         ssbd.py         # SSBD TTL -> Study
         idr.py          # IDR TSV -> Study
         bia.py          # BIA API -> Study
+        rocrate.py      # RO-Crate JSON-LD -> Study
 
 resources/
     ssbd/               # SSBD ontology files
         ssbd_instances.ttl
         ssbd_meta.ttl
     idr/                # IDR metadata (git clone)
+    rocrate/            # RO-Crate examples
+        example-template/   # Template for external databases
 
 output/                 # Transformed JSON files
     ssbd.json
     idr.json
     bia.json
+    rocrate.json
 ```
 
 ## API Server
