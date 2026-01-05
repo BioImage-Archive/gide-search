@@ -595,6 +595,21 @@ ul {
     overflow: hidden;
 }
 
+/* Search Result Highlighting */
+.study-card mark,
+.study-card-title mark {
+    background: linear-gradient(120deg, rgba(45, 226, 217, 0.3) 0%, rgba(45, 226, 217, 0.4) 100%);
+    color: inherit;
+    padding: 0.1em 0.2em;
+    border-radius: 2px;
+    font-weight: inherit;
+}
+
+.study-card-title h3 a mark {
+    /* Slightly stronger highlight in titles */
+    background: linear-gradient(120deg, rgba(45, 226, 217, 0.35) 0%, rgba(45, 226, 217, 0.45) 100%);
+}
+
 /* Study Meta */
 .study-meta {
     display: flex;

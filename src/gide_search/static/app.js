@@ -212,6 +212,19 @@ function renderStudyCard(hit) {
     const organisms = hit.organisms.slice(0, 3);
     const methods = hit.imaging_methods.slice(0, 3);
 
+    // Use highlighted title if available, otherwise escape the plain title
+    const titleHtml = hit.highlights?.title
+        ? sanitizeHighlight(hit.highlights.title)
+        : escapeHtml(hit.title);
+
+    // Use highlighted description fragments if available
+    let descriptionHtml;
+    if (hit.highlights?.description && hit.highlights.description.length > 0) {
+        descriptionHtml = hit.highlights.description.map(sanitizeHighlight).join(' ... ');
+    } else {
+        descriptionHtml = escapeHtml(hit.description);
+    }
+
     return `
         <article class="study-card" onclick="openStudy('${escapeHtml(hit.id)}')" style="cursor: pointer;">
             <div class="study-card-header">
@@ -219,7 +232,7 @@ function renderStudyCard(hit) {
                 <div class="study-card-title">
                     <h3>
                         <a href="/study/${encodeURIComponent(hit.id)}" onclick="event.stopPropagation(); openStudy('${escapeHtml(hit.id)}'); return false;">
-                            ${escapeHtml(hit.title)}
+                            ${titleHtml}
                         </a>
                     </h3>
                     <a href="${escapeHtml(hit.source_url)}" target="_blank" rel="noopener" onclick="event.stopPropagation();" title="View original study">
@@ -231,7 +244,7 @@ function renderStudyCard(hit) {
                     </a>
                 </div>
             </div>
-            <p class="study-description">${escapeHtml(hit.description)}</p>
+            <p class="study-description">${descriptionHtml}</p>
             <div class="study-meta">
                 ${hit.release_date ? `
                     <span class="study-meta-item">
@@ -416,6 +429,32 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+function sanitizeHighlight(text) {
+    // Escape all HTML except <mark> and </mark> tags for search highlighting
+    // This prevents XSS while allowing highlight marks to render
+    if (!text) return '';
+
+    // First, replace <mark> and </mark> with placeholders
+    const markPlaceholder = '\u0000MARK\u0000';
+    const markEndPlaceholder = '\u0000/MARK\u0000';
+
+    let result = text
+        .replace(/<mark>/g, markPlaceholder)
+        .replace(/<\/mark>/g, markEndPlaceholder);
+
+    // Escape the rest
+    const div = document.createElement('div');
+    div.textContent = result;
+    result = div.innerHTML;
+
+    // Restore <mark> tags
+    result = result
+        .replace(new RegExp(markPlaceholder, 'g'), '<mark>')
+        .replace(new RegExp(markEndPlaceholder, 'g'), '</mark>');
+
+    return result;
 }
 
 // ============================================

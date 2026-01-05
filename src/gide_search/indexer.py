@@ -358,6 +358,7 @@ class DatasetIndexer:
         date_to: str | None = None,
         size: int = 10,
         from_: int = 0,
+        highlight: bool = True,
     ) -> dict:
         """Search with filters and return facet aggregations."""
         # Build query
@@ -467,6 +468,25 @@ class DatasetIndexer:
                 },
             },
         }
+
+        # Add highlighting for text fields when there's a search query
+        if highlight and query:
+            body["highlight"] = {
+                "fields": {
+                    "title": {
+                        "number_of_fragments": 0,  # Return full field with highlights
+                    },
+                    "description": {
+                        "fragment_size": 150,
+                        "number_of_fragments": 3,
+                    },
+                    "keywords": {
+                        "number_of_fragments": 0,
+                    },
+                },
+                "pre_tags": ["<mark>"],
+                "post_tags": ["</mark>"],
+            }
 
         return self.es.search(index=self.index_name, body=body)
 

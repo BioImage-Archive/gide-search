@@ -41,6 +41,14 @@ class Facets(BaseModel):
     years: list[FacetBucket]
 
 
+class Highlights(BaseModel):
+    """Highlighted text fragments from search matches."""
+
+    title: str | None = None
+    description: list[str] | None = None
+    keywords: list[str] | None = None
+
+
 class StudyHit(BaseModel):
     """A single search result."""
 
@@ -55,6 +63,7 @@ class StudyHit(BaseModel):
     release_date: str | None
     file_count: int | None
     total_size_bytes: int | None
+    highlights: Highlights | None = None
 
 
 class SearchResponse(BaseModel):
@@ -81,6 +90,17 @@ def parse_es_response(es_response: dict) -> SearchResponse:
             for iap in src.get("image_acquisition_protocols", [])
             for m in iap.get("methods", [])
         ]
+
+        # Extract highlights if present
+        highlights = None
+        if "highlight" in hit:
+            hl = hit["highlight"]
+            highlights = Highlights(
+                title=hl.get("title", [None])[0],
+                description=hl.get("description"),
+                keywords=hl.get("keywords"),
+            )
+
         hits.append(
             StudyHit(
                 id=src["id"],
@@ -94,6 +114,7 @@ def parse_es_response(es_response: dict) -> SearchResponse:
                 release_date=src.get("release_date"),
                 file_count=src.get("file_count"),
                 total_size_bytes=src.get("total_size_bytes"),
+                highlights=highlights,
             )
         )
 
