@@ -17,6 +17,12 @@
             },
             "measurementMethod": {
                 "@id": "dwc:measurementMethod"
+            },
+            "BioSample": {
+                "@id": "http://schema.org/BioSample"
+            },
+            "LabProtocol": {
+                "@id": "http://schema.org/LabProtocol"
             }
         }
     ],
@@ -140,7 +146,7 @@
         },
         {
             "@id": "#biosample-1",
-            "@type": "BioChemEntity",
+            "@type": "BioSample",
             "name": "Mouse brain hippocampus tissue",
             "description": "Fixed brain tissue sections from adult C57BL/6 mice, specifically the CA1 region of the hippocampus. Tissue was prepared using standard perfusion fixation with 4% PFA.",
             "taxonomicRange": [
