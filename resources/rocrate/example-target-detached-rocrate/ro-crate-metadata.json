@@ -5,11 +5,27 @@
             "bia": "https://bioimage-archive.org/ro-crate/",
             "obo": "http://purl.obolibrary.org/obo/",
             "dwc": "http://rs.tdwg.org/dwc/terms/",
+            "bao": "http://www.bioassayontology.org/bao#",
             "vernacularName": {
                 "@id": "dwc:vernacularName"
             },
             "scientificName": {
                 "@id": "dwc:scientificName"
+            },
+            "hasCellLine": {
+                "@id": "bao:BAO_0002004"
+            },
+            "measurementMethod": {
+                "@id": "dwc:measurementMethod"
+            },
+            "BioSample": {
+                "@id": "http://schema.org/BioSample"
+            },
+            "LabProtocol": {
+                "@id": "http://schema.org/LabProtocol"
+            },
+            "DefinedTerm": {
+                "@id": "http://schema.org/DefinedTerm"
             }
         }
     ],
@@ -39,7 +55,7 @@
                 "synaptic organization"
             ],
             "publisher": {
-                "@id": "#publisher"
+                "@id": "https://example-database.org"
             },
             "author": [
                 {
@@ -64,17 +80,27 @@
                     "@id": "#biosample-1"
                 }
             ],
-            "measurementTechnique": [
+            "measurementMethod": [
                 {
                     "@id": "#imaging-protocol-1"
                 }
+            ],
+            "size": [
+                {
+                    "@id": "#total-dataset-size"
+                },
+                {
+                    "@id": "#file-count"
+                }
+            ],
+            "image": [
+                "https://example-database.org/studies/EXAMPLE-001/example_thumbnail_image.png"
             ]
         },
         {
-            "@id": "#publisher",
+            "@id": "https://example-database.org",
             "@type": "Organization",
-            "name": "Example Image Database",
-            "url": "https://example-database.org"
+            "name": "Example Image Database"
         },
         {
             "@id": "https://orcid.org/0000-0001-2345-6789",
@@ -130,6 +156,11 @@
                 {
                     "@id": "http://purl.obolibrary.org/obo/NCBITaxon_10090"
                 }
+            ],
+            "hasCellLine": [
+                {
+                    "@id": "http://purl.obolibrary.org/obo/CLO_0003684"
+                }
             ]
         },
         {
@@ -143,7 +174,7 @@
             "@type": "LabProtocol",
             "name": "Confocal laser scanning microscopy",
             "description": "Z-stack acquisition using a Zeiss LSM 880 confocal microscope with 63x oil immersion objective (NA 1.4). Three-channel acquisition for DAPI, Alexa 488, and Alexa 594. Voxel size: 0.1 x 0.1 x 0.3 μm.",
-            "measurementMethod": {
+            "measurementTechnique": {
                 "@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
             },
             "labEquipment": "Zeiss LSM 880 with Airyscan, 63x/1.4 NA oil objective"
@@ -152,6 +183,25 @@
             "@id": "http://purl.obolibrary.org/obo/FBbi_00000251",
             "@type": "DefinedTerm",
             "name": "confocal microscopy"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/CLO_0003684",
+            "@type": "DefinedTerm",
+            "name": "Hela cell"
+        },
+        {
+            "@id": "#total-dataset-size",
+            "@type": "QuantitiveValue",
+            "value": "2478234",
+            "unitCode": "http://purl.obolibrary.org/obo/UO_0000233",
+            "unitText": "bytes"
+        },
+        {
+            "@id": "#file-count",
+            "@type": "QuantitiveValue",
+            "value": "500",
+            "unitCode": "http://purl.obolibrary.org/obo/UO_0000189",
+            "unitText": "file count"
         }
     ]
 }
