@@ -55,7 +55,7 @@
                 "synaptic organization"
             ],
             "publisher": {
-                "@id": "#publisher"
+                "@id": "https://example-database.org"
             },
             "author": [
                 {
