@@ -23,6 +23,9 @@
             },
             "LabProtocol": {
                 "@id": "http://schema.org/LabProtocol"
+            },
+            "DefinedTerm": {
+                "@id": "http://schema.org/DefinedTerm"
             }
         }
     ],
