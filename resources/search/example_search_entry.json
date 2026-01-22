@@ -1,0 +1,139 @@
+{
+  "id": "https://example-database.org/studies/EXAMPLE-001",
+  "type": [
+    "Dataset"
+  ],
+  "measurementMethod": [
+    {
+      "id": "#imaging-protocol-1",
+      "type": [
+        "LabProtocol"
+      ],
+      "description": "Z-stack acquisition using a Zeiss LSM 880 confocal microscope with 63x oil immersion objective (NA 1.4). Three-channel acquisition for DAPI, Alexa 488, and Alexa 594. Voxel size: 0.1 x 0.1 x 0.3 \u03bcm.",
+      "measurementTechnique": [
+        {
+          "id": "obo:FBbi_00000251",
+          "type": [
+            "DefinedTerm"
+          ],
+          "name": "confocal microscopy"
+        }
+      ],
+      "name": "Confocal laser scanning microscopy"
+    }
+  ],
+  "about": [
+    {
+      "id": "#biosample-1",
+      "type": [
+        "BioChemEntity"
+      ],
+      "description": "Fixed brain tissue sections from adult C57BL/6 mice, specifically the CA1 region of the hippocampus. Tissue was prepared using standard perfusion fixation with 4% PFA.",
+      "name": "Mouse brain hippocampus tissue",
+      "hasCellLine": [
+        {
+          "id": "obo:CLO_0003684",
+          "type": [
+            "DefinedTerm"
+          ],
+          "name": "Hela cell"
+        }
+      ]
+    }
+  ],
+  "author": [
+    {
+      "id": "https://orcid.org/0000-0001-2345-6789",
+      "type": [
+        "Person"
+      ],
+      "affiliation": [
+        {
+          "id": "https://ror.org/00000001",
+          "type": [
+            "Organization"
+          ],
+          "address": null,
+          "name": "University of Science",
+          "url": "https://university.edu"
+        }
+      ],
+      "email": "jane.researcher@university.edu",
+      "name": "Jane Researcher"
+    },
+    {
+      "id": "#author-smith",
+      "type": [
+        "Person"
+      ],
+      "affiliation": [
+        {
+          "id": "#org-institute",
+          "type": [
+            "Organization"
+          ],
+          "address": "123 Science Street, Research City",
+          "name": "Research Institute",
+          "url": null
+        }
+      ],
+      "email": null,
+      "name": "John Smith"
+    }
+  ],
+  "citation": [
+    {
+      "id": "https://doi.org/10.1234/example.2024.001",
+      "type": [
+        "ScholarlyArticle"
+      ],
+      "datePublished": "2024",
+      "name": "Synaptic organization in mouse hippocampus revealed by super-resolution microscopy"
+    }
+  ],
+  "datePublished": "2024-06-15",
+  "description": "This dataset contains confocal microscopy images of mouse brain tissue sections, focusing on neuronal structures in the hippocampus. The study investigates synaptic organization using immunofluorescence labeling of pre- and post-synaptic markers.",
+  "funder": [
+    {
+      "id": "#grant-nih",
+      "type": [
+        "Grant"
+      ],
+      "identifier": "R01-NS123456",
+      "name": "NIH National Institute of Health"
+    }
+  ],
+  "identifier": "EXAMPLE-001",
+  "image": [
+    "https://example-database.org/studies/EXAMPLE-001/example_thumbnail_image.png"
+  ],
+  "keywords": [
+    "confocal microscopy",
+    "mouse brain",
+    "hippocampus",
+    "synaptic organization"
+  ],
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "name": "High-resolution imaging of mouse brain tissue using confocal microscopy",
+  "publisher": null,
+  "size": [
+    {
+      "id": "#total-dataset-size",
+      "type": [
+        "QuantitiveValue"
+      ],
+      "unitCode": "http://purl.obolibrary.org/obo/UO_0000233",
+      "unitText": "bytes",
+      "value": "2478234"
+    },
+    {
+      "id": "#file-count",
+      "type": [
+        "QuantitiveValue"
+      ],
+      "unitCode": "http://purl.obolibrary.org/obo/UO_0000189",
+      "unitText": "file count",
+      "value": "500"
+    }
+  ]
+}
