@@ -191,15 +191,15 @@
         },
         {
             "@id": "#total-dataset-size",
-            "@type": "QuantitiveValue",
-            "value": "2478234",
+            "@type": "QuantitativeValue",
+            "value": 2478234,
             "unitCode": "http://purl.obolibrary.org/obo/UO_0000233",
             "unitText": "bytes"
         },
         {
             "@id": "#file-count",
-            "@type": "QuantitiveValue",
-            "value": "500",
+            "@type": "QuantitativeValue",
+            "value": 500,
             "unitCode": "http://purl.obolibrary.org/obo/UO_0000189",
             "unitText": "file count"
         }
