@@ -28,8 +28,8 @@
             "LabProtocol": {
                 "@id": "http://schema.org/LabProtocol"
             },
-            "DefinedTerm": {
-                "@id": "http://schema.org/DefinedTerm"
+            "labEquipement": {
+                "@id": "http://schema.org/labEquipment"
             }
         }
     ],
@@ -187,9 +187,11 @@
             "@type": "LabProtocol",
             "name": "Confocal laser scanning microscopy",
             "description": "Z-stack acquisition using a Zeiss LSM 880 confocal microscope with 63x oil immersion objective (NA 1.4). Three-channel acquisition for DAPI, Alexa 488, and Alexa 594. Voxel size: 0.1 x 0.1 x 0.3 μm.",
-            "measurementTechnique": {
-                "@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
-            },
+            "measurementTechnique": [
+                {
+                    "@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
+                }
+            ],
             "labEquipment": "Zeiss LSM 880 with Airyscan, 63x/1.4 NA oil objective"
         },
         {

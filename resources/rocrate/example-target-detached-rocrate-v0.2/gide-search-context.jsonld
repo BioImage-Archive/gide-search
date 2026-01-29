@@ -28,8 +28,8 @@
             "LabProtocol": {
                 "@id": "http://schema.org/LabProtocol"
             },
-            "DefinedTerm": {
-                "@id": "http://schema.org/DefinedTerm"
+            "labEquipement": {
+                "@id": "http://schema.org/labEquipment"
             }
         }
     ]

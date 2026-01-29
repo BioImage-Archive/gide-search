@@ -1,11 +1,13 @@
 # GIDE search input ro-crate profile
 
+January 2026
+
 ## ro-crate-metadata structure overview
 
 As input, we expect a _detached RO-Crate_ consisiting solely of an ro-crate-metadata.json. This file _MUST_:
 
 1. Generally abide by the requirements of a detatched ro-crate. At a high level this includes:
-    - 1.1 Contain a self-describing RO-Crate Metadata Descriptor, with an @id of ro-crate-metadata.json, and a conformsTo of https://w3id.org/ro/crate/X where X > 1.2 (the version which defined detached ro-crates)
+    - 1.1 Contain a self-describing RO-Crate Metadata Descriptor, with an @id of ro-crate-metadata.json, and a conformsTo of https://w3id.org/ro/crate/X where X equal to or greater than 1.2 (the version which defined detached ro-crates)
     - 1.2 Have a root dataset entity which the ro-crate-madatada.json describes (via the 'about' property).
 2. The root dataset entity has an @id that is an absolute url to a page where the more information can be found about the entry and the data can be obtained.
 3. Use the context term definitions in gide-search-context.jsonld. Additional terms _MAY_ be added, however, terms that are defined in this context _CANNOT_ be changed to point at new IRIs.
@@ -99,7 +101,7 @@ Note that the requirements requirements below apply to both the json field names
 | publisher | schema:publisher | REQUIRED | 1 | MUST be a a single _Organisation_ that provides the data at URL of the @id of this entry. |
 | about | schema:about | REQUIRED | 1+ | MUST contain all the information of on the biological matter relevant to this dataset. These MAY be _BioSamples_, _Taxons_, or _DefinedTerms_. |
 | measurementMethod | dwciri:measurementMethod | REQUIRED | 1+ | MUST contain all the information of on the imaging techniques relevant to this dataset. These may be _LabProtocols_, or _DefinedTerms_. |
-| thumnailUrl | schema:thumbnailUrl | Recommended | 0+ | MUST be a list of URLs from which a thumbnail of an example image for the dataset can be obtained, for use in displaying example of the images. |
+| thumbnailUrl | schema:thumbnailUrl | Recommended | 0+ | MUST be a list of URLs from which a thumbnail of an example image for the dataset can be obtained, for use in displaying example of the images. |
 | identifier | schema:identifier | Recommended | 1 | MUST be a unique identifier used by the publisher of the dataset to refer to this dataset. |
 | keywords | schema:keywords | optional | 0+ | Relevant keywords or tags used to describe the subject, methods, or contents of dataset. |  
 | funder | schema:funder | optional | 0+ | The _Grants_ which funded the contributors or creation of this dataset.  |  
@@ -144,7 +146,7 @@ Can found through the property chains:
 - Dataset - measurementMethod -> DefinedTerm
 - Dataset - measurementMethod -> LabProtocol - measurementTechnique -> DefinedTerm
 
-where X can be a number of different relations (e.g. hasCellLine). If the connetion obj - X -> DefinedTerm is present, and Dataset - about/measurementMethod -> obj, then Dataset - about/measurementMethod -> DefinedTerm MUST also be included explicitly.
+where X can be a number of different relations (e.g. hasCellLine). If the connetion obj - X -> DefinedTerm is present, and Dataset - about | measurementMethod -> obj, then Dataset - about | measurementMethod -> DefinedTerm MUST also be included explicitly.
 
 
 | Field | Property | Requirement  | Cardinality | Description |
@@ -172,6 +174,8 @@ If the connetion BioSample - X -> Taxon is present, and Dataset - about -> BioSa
 
 ### BioSample
 
+Please note that the BioSample type is a draft proposal to be added to schema.org, and thus http://schema.org/BioSample does not resolve. Details of the specification can be found at https://bioschemas.org/types/BioSample/0.2-DRAFT.
+
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
 | @id | | REQUIRED | 1 | MUST be an absolute URI to documentation about the term |
@@ -183,13 +187,15 @@ If the connetion BioSample - X -> Taxon is present, and Dataset - about -> BioSa
 
 ### LabProtocol
 
+Please note that the LabProtocol type and labEquipment property are draft proposal to be added to schema.org, and thus http://schema.org/LabProtocol and http://schema.org/labEquipment do not resolve. Details of the specification can instead be found at https://bioschemas.org/profiles/LabProtocol/0.8-DRAFT. 
+
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
 | @id | | REQUIRED | 1 | MUST be an absolute URI to documentation about the term |
 | @type | rdf:type | REQUIRED | 1+ | MUST include LabProtocol, but may include other types. |
 | name | schema:name | REQUIRED | 1 | SHOULD identify the protocol and distinguish it from others relevant to this dataset. |
 | description | schema:description | REQUIRED | 1 | SHOULD provide details of the steps or settings involved in the protocol. |
-| labEquipment | schema:description | Recommended | 0+ | SHOULD be a description of the equipment used in the capture of the image. |
+| labEquipment | schema:labEquipment | Recommended | 0+ | SHOULD be a description of the equipment used in the capture of the image. |
 | measurementTechnique | schema:description | Recommended | 0+ | SHOULD be a _DefinedTerm_ from the FBBI ontology if possible. |
 
 
