@@ -177,7 +177,7 @@ Please note that the BioSample type is a draft proposal to be added to schema.or
 
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
-| @id | | REQUIRED | 1 | MUST be an absolute URI to documentation about the term |
+| @id | | REQUIRED | 1 | CAN be a resolvable URL if one is available, but more likely it will be a local identifer within the document. |
 | @type | rdf:type | REQUIRED | 1+ | MUST include BioSample, but may include other types. |
 | name | schema:name | REQUIRED | 1 | SHOULD identify the main features of this biosample that distinguish it from others relevant to this dataset. |
 | description | schema:description | REQUIRED | 1 | SHOULD provide details of the biosample, such as variables that were modified on a case-by-case basis. |
@@ -190,7 +190,7 @@ Please note that the LabProtocol type and labEquipment property are draft propos
 
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
-| @id | | REQUIRED | 1 | MUST be an absolute URI to documentation about the term |
+| @id | | REQUIRED | 1 | CAN be a resolvable URL if one is available, but more likely it will be a local identifer within the document. |
 | @type | rdf:type | REQUIRED | 1+ | MUST include LabProtocol, but may include other types. |
 | name | schema:name | REQUIRED | 1 | SHOULD identify the protocol and distinguish it from others relevant to this dataset. |
 | description | schema:description | REQUIRED | 1 | SHOULD provide details of the steps or settings involved in the protocol. |
@@ -202,7 +202,7 @@ Please note that the LabProtocol type and labEquipment property are draft propos
 
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
-| @id | | REQUIRED | 1 | SHOULD be an RORID id, otherwise a local identifier to the document |
+| @id | | REQUIRED | 1 | SHOULD a resolvable id, such as a DOI, otherwise a local identifier to the document |
 | @type | rdf:type | REQUIRED | 1+ | MUST include Organisation, but may include other types. |
 | name | schema:name | REQUIRED | 1 | SHOULD be the name or title of the grant. |
 | url | schema:url | optional | 1 | SHOULD be a link to a website where more information can be found about the grant. |
@@ -212,7 +212,7 @@ Please note that the LabProtocol type and labEquipment property are draft propos
 
 | Field | Property | Requirement  | Cardinality | Description |
 | --- | --- | :---: | --- | --- |
-| @id | | REQUIRED | 1 | SHOULD be an RORID id, otherwise a local identifier to the document |
+| @id | | REQUIRED | 1 | SHOULD be a resolvable id, such as a DOI, otherwise a local identifier to the document |
 | @type | rdf:type | REQUIRED | 1+ | MUST include Organisation, but may include other types. |
 | name | schema:name | REQUIRED | 1 | MUST be the title of the article as published. |
 | datePublished | schema:datePublished | Recommended | 1 | MUST be single string value in ISO 8601 date format. |
