@@ -12,6 +12,8 @@ As input, we expect a _detached RO-Crate_ consisiting solely of an ro-crate-meta
 2. The root dataset entity has an @id that is an absolute url to a page where the more information can be found about the entry and the data can be obtained.
 3. Use the context term definitions in gide-search-context.jsonld. Additional terms _MAY_ be added, however, terms that are defined in this context _MUST NOT_ be changed to point at new IRIs.
 
+Additionlly, it is important to note that the schema described below is considered 'open', in that additional relevant connections can be added to the document, though there is no guarentee that these will be used in indexing for search. 
+
 ### Expected objects
 
 The @graph of the ro-crate-metadata _MUST_ include:
