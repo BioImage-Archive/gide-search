@@ -7,12 +7,14 @@ January 2026
 As input, we expect a _detached RO-Crate_ consisiting solely of an ro-crate-metadata.json. This file _MUST_:
 
 1. Generally abide by the requirements of a detatched ro-crate. At a high level this includes:
-    - 1.1 Contain a self-describing RO-Crate Metadata Descriptor, with an @id of ro-crate-metadata.json, and a conformsTo of https://w3id.org/ro/crate/X where X equal to or greater than 1.2 (the version which defined detached ro-crates)
+    - 1.1 Contain a self-describing RO-Crate Metadata Descriptor, with an @id of ro-crate-metadata.json.
     - 1.2 Have a root dataset entity which the ro-crate-madatada.json describes (via the 'about' property).
 2. The root dataset entity has an @id that is an absolute url to a page where the more information can be found about the entry and the data can be obtained.
 3. Use the context term definitions in gide-search-context.jsonld. Additional terms _MAY_ be added, however, terms that are defined in this context _MUST NOT_ be changed to point at new IRIs.
 
-Additionlly, it is important to note that the schema described below is considered 'open', in that additional relevant connections can be added to the document, though there is no guarentee that these will be used in indexing for search. 
+Note that this profile is designed for detached ro-crates, and so depends on https://w3id.org/ro/crate/X where X equal to or greater than 1.2 (the version which defined detached ro-crates).
+
+The schema described below is considered 'open', in that additional relevant connections can be added to the document, though there is no guarentee that these will be used in indexing for search. 
 
 ### Expected objects
 
