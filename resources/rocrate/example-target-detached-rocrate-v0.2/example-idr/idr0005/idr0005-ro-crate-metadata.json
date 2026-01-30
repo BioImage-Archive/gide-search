@@ -54,42 +54,6 @@
       }
     },
     {
-      "@id": "https://idr.openmicroscopy.org/",
-      "@type": "Organization",
-      "name": "Image Data Resource",
-      "url": "https://idr.openmicroscopy.org/"
-    },
-    {
-      "@id": "#person-1",
-      "@type": "Person",
-      "name": "W James Nelson",
-      "givenName": "W James",
-      "familyName": "Nelson",
-      "email": "wjnelson@stanford.edu",
-      "address": "Department of Biology and Department of Molecular and Cellular Physiology, Stanford University, Stanford, CA 94305, USA"
-    },
-    {
-      "@id": "https://doi.org/10.1083/jcb.201306082",
-      "@type": "ScholarlyArticle",
-      "name": "A genome-wide screen identifies conserved protein hubs required for cadherin-mediated cell-cell adhesion."
-    },
-    {
-      "@id": "http://purl.obolibrary.org/obo/NCBITaxon_7227",
-      "@type": "Taxon",
-      "scientificName": "Drosophila melanogaster"
-    },
-    {
-      "@id": "#screen-biosample-1",
-      "@type": "BioSample",
-      "name": "cell",
-      "description": "A genome-wide RNAi screen for loss of DE- cadherin-mediated, Ca2+-dependent cell-cell adhesion in DECAD-S2 cells . This initial screen yielded 1,201 RNAi's that produced defective cell-cell aggregation in DECAD-S2 cells.",
-      "taxonomicRange": [
-        {
-          "@id": "http://purl.obolibrary.org/obo/NCBITaxon_7227"
-        }
-      ]
-    },
-     {
       "@id": "https://idr.openmicroscopy.org/study/idr0005/",
       "@type": "Dataset",
       "name": "A genome-wide screen identifies conserved protein hubs required for cadherin-mediated cell-cell adhesion",
@@ -122,6 +86,12 @@
         }
       ],
       "measurementMethod": [
+        {
+          "@id": "#screen-protocol-1-0"
+        },
+        {
+          "@id": "#screen-protocol-2-0"
+        },
         {
           "@id": "#screen-protocol-1-1"
         },
@@ -166,9 +136,60 @@
       ]
     },
     {
+      "@id": "https://idr.openmicroscopy.org/",
+      "@type": "Organization",
+      "name": "Image Data Resource",
+      "url": "https://idr.openmicroscopy.org/"
+    },
+    {
+      "@id": "#person-1",
+      "@type": "Person",
+      "name": "W James Nelson",
+      "givenName": "W James",
+      "familyName": "Nelson",
+      "email": "wjnelson@stanford.edu",
+      "address": "Department of Biology and Department of Molecular and Cellular Physiology, Stanford University, Stanford, CA 94305, USA"
+    },
+    {
+      "@id": "https://doi.org/10.1083/jcb.201306082",
+      "@type": "ScholarlyArticle",
+      "name": "A genome-wide screen identifies conserved protein hubs required for cadherin-mediated cell-cell adhesion."
+    },
+    {
+      "@id": "http://purl.obolibrary.org/obo/NCBITaxon_7227",
+      "@type": "Taxon",
+      "scientificName": "Drosophila melanogaster"
+    },
+    {
+      "@id": "#screen-biosample-1",
+      "@type": "BioSample",
+      "name": "cell",
+      "description": "A genome-wide RNAi screen for loss of DE- cadherin-mediated, Ca2+-dependent cell-cell adhesion in DECAD-S2 cells . This initial screen yielded 1,201 RNAi's that produced defective cell-cell aggregation in DECAD-S2 cells.",
+      "taxonomicRange": [
+        {
+          "@id": "http://purl.obolibrary.org/obo/NCBITaxon_7227"
+        }
+      ]
+    },
+    {
       "@id": "http://purl.obolibrary.org/obo/FBBI_00000246",
       "@type": "DefinedTerm",
       "name": "fluorescence microscopy"
+    },
+    {
+      "@id": "#screen-protocol-1-0",
+      "@type": "LabProtocol",
+      "name": "fluorescence microscopy",
+      "measurementTechnique": [
+        {
+          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0003789",
+      "@type": "DefinedTerm",
+      "name": "growth protocol"
     },
     {
       "@id": "#screen-protocol-1-1",
@@ -177,9 +198,14 @@
       "description": "Drosophila S2U cells were maintained in Schneider's medium (Invitro- gen) supplemented with 10% heat-inactivated fetal bovine serum (Sigma- Aldrich), penicillin, streptomycin, and kanamycin (Goshima et al., 2007). Full-length DE-cadherin was cloned into pAc5.1/V5 His B (Invitrogen) and cotransfected with blasticidin and hygromycin plasmids in S2U cells to generate stable expression lines (Millar et al., 1994). For RNAi treatment, DE-cadherin-expressing S2 cells were treated with 625 _g/ml trypsin for 20 min at 25C and then resuspended in serum-free Schneider's medium. 1 ug RNA was incubated with 6 x 105 cells for 30 min in serum-free Schneider's medium followed by a 5-d recovery in Schneider's medium supplemented with 20% heat-inactivated fetal bovine serum (Goshima et al., 2007). RNAi-treated cells were maintained in plasticware coated with a 10% Pluronic 127 (Sigma-Aldrich) solution to minimize cell-substrate interactions. After 5 d of RNAi treatment, 1 _g/ml Hoechst 33342 (Thermo Fisher Sci- entific) was added to each well. 96-well plates were shaken for 5 min at 800 rpm on a vortex mixer (MixMate; Eppendorf). 96-well plates were then placed on a platform that rotated around a 3-cm radius (D. Proffit, Molecular and Cellular Physiology, Stanford Institute for Neuro-Innovation and Translational Neuroscience Engineering Shop, Stanford School of Medicine, Stanford, CA) for 20 min at 250 rpm and were next shaken for 30 s at 650 rpm on a MixMate.",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0003789"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007571",
+      "@type": "DefinedTerm",
+      "name": "HCS library protocol"
     },
     {
       "@id": "#screen-protocol-1-2",
@@ -188,9 +214,14 @@
       "description": "The initial genome-wide screen used the V2 RNAi library (Thermo Fisher Scientific; Goshima et al., 2007).",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007571"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007572",
+      "@type": "DefinedTerm",
+      "name": "HCS image acquistion and feature extraction protocol"
     },
     {
       "@id": "#screen-protocol-1-3",
@@ -199,9 +230,14 @@
       "description": "Plates were imaged using an automated microscope (ImageXpress Micro; Molecular Devices) with a 4_ objective. Images were acquired with MetaMorph (Molecular Devices) and a camera (CoolSNAP HQ; Photometrics).",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007572"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007573",
+      "@type": "DefinedTerm",
+      "name": "HCS data analysis protocol"
     },
     {
       "@id": "#screen-protocol-1-4",
@@ -210,7 +246,7 @@
       "description": "For scoring, three images/well were ranked by eye based on aggregation (0 = strong aggregation; 4 = no ag- gregation). A score of >1.5 was considered defective aggregation.",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007573"
         }
       ]
     },
@@ -226,13 +262,23 @@
       ]
     },
     {
+      "@id": "#screen-protocol-2-0",
+      "@type": "LabProtocol",
+      "name": "fluorescence microscopy",
+      "measurementTechnique": [
+        {
+          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+        }
+      ]
+    },
+    {
       "@id": "#screen-protocol-2-1",
       "@type": "LabProtocol",
       "name": "growth protocol",
       "description": "Drosophila S2U cells were maintained in Schneider's medium (Invitro- gen) supplemented with 10% heat-inactivated fetal bovine serum (Sigma- Aldrich), penicillin, streptomycin, and kanamycin (Goshima et al., 2007). Full-length DE-cadherin was cloned into pAc5.1/V5 His B (Invitrogen) and cotransfected with blasticidin and hygromycin plasmids in S2U cells to generate stable expression lines (Millar et al., 1994). For RNAi treatment, DE-cadherin-expressing S2 cells were treated with 625 _g/ml trypsin for 20 min at 25C and then resuspended in serum-free Schneider's medium. 1 ug RNA was incubated with 6 x 105 cells for 30 min in serum-free Schneider's medium followed by a 5-d recovery in Schneider's medium supplemented with 20% heat-inactivated fetal bovine serum (Goshima et al., 2007). RNAi-treated cells were maintained in plasticware coated with a 10% Pluronic 127 (Sigma-Aldrich) solution to minimize cell-substrate interactions. After 5 d of RNAi treatment, 1 ug/ml Hoechst 33342 (Thermo Fisher Sci- entific) was added to each well. 96-well plates were shaken for 5 min at 800 rpm on a vortex mixer (MixMate; Eppendorf). 96-well plates were then placed on a platform that rotated around a 3-cm radius (D. Proffit, Molecular and Cellular Physiology, Stanford Institute for Neuro-Innovation and Translational Neuroscience Engineering Shop, Stanford School of Medicine, Stanford, CA) for 20 min at 250 rpm and were next shaken for 30 s at 650 rpm on a MixMate.",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0003789"
         }
       ]
     },

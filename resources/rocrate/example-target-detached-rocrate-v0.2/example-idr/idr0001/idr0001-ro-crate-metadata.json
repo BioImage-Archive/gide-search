@@ -53,7 +53,7 @@
         "@id": "https://idr.openmicroscopy.org/study/idr0001/"
       }
     },
-        {
+    {
       "@id": "https://idr.openmicroscopy.org/study/idr0001/",
       "@type": "Dataset",
       "name": "A genomic Multiprocess survey of machineries that control and link cell shape, microtubule organization, and cell-cycle progression.",
@@ -83,6 +83,9 @@
         }
       ],
       "measurementMethod": [
+        {
+          "@id": "#screen-protocol-1-0"
+        },
         {
           "@id": "#screen-protocol-1-1"
         },
@@ -154,15 +157,35 @@
       "name": "spinning disk confocal microscopy"
     },
     {
+      "@id": "#screen-protocol-1-0",
+      "@type": "LabProtocol",
+      "name": "spinning disk confocal microscopy",
+      "measurementTechnique": [
+        {
+          "@id": "http://purl.obolibrary.org/obo/FBBI_00000253"
+        }
+      ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0003789",
+      "@type": "DefinedTerm",
+      "name": "growth protocol"
+    },
+    {
       "@id": "#screen-protocol-1-1",
       "@type": "LabProtocol",
       "name": "growth protocol",
       "description": "KO mutants were grown exponentially for >48 hr and imaged in 96-well micro- plates (lectin-coated glass bottom, 10 mg/well) containing Cascade Blue Dextran-labeled YES medium (0.1 mg/ml).",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000253"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0003789"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007571",
+      "@type": "DefinedTerm",
+      "name": "HCS library protocol"
     },
     {
       "@id": "#screen-protocol-1-2",
@@ -171,9 +194,14 @@
       "description": "The Bioneer haploid deletion (knockout, KO) library v.2 (Bioneer, Korea) was modified to generate a GFP-tubulin expressing library (Dixon et al., 2008).",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000253"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007571"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007572",
+      "@type": "DefinedTerm",
+      "name": "HCS image acquistion and feature extraction protocol"
     },
     {
       "@id": "#screen-protocol-1-3",
@@ -182,9 +210,14 @@
       "description": "Two-color images were acquired using an automated OperaLX spinning-disk confocal microscope (Perkin Elmer) with 603 water-immersion objective (NA 1.2). Six stacks of 16 z planes 0.4 mm separation were collected for each well. The entire genomic KO library was filmed twice. Customized software was used for image analysis and feature extraction.",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000253"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007572"
         }
       ]
+    },
+    {
+      "@id": "http://www.ebi.ac.uk/efo/EFO_0007573",
+      "@type": "DefinedTerm",
+      "name": "HCS data analysis protocol"
     },
     {
       "@id": "#screen-protocol-1-4",
@@ -193,7 +226,7 @@
       "description": "Cell shape or microtubule hits were KO strains with a: (1) low Kolmogorov- Smirnov p value relative to a mean wild-type for any one feature, or (2) signif- icant Euclidean distance deviation from a mean wild-type across many features. Cell-cycle progression hits were KOs with the proportion of cells in greater than two 2-cell cycle stages outside the 95% bootstrap confidence interval of the corresponding wild-type stages. Genotypic and visual quality controls were done for corroboration. Hits were large-scale validated with ten times independent rescreening (see Protocol) and if picked in R35% of cases kept as high-confidence hits for analysis. Support vector machine clas- sifiers assigned eight phenotypic classes to cell shape hits. ERA rates (Kafri et al., 2013) were calculated for cell-cycle progression hits. Clustering used R, functional GO assignments DAVID, Bayesian analysis, and the R package bnlearn (Scutari, 2010).",
       "measurementTechnique": [
         {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000253"
+          "@id": "http://www.ebi.ac.uk/efo/EFO_0007573"
         }
       ]
     },
