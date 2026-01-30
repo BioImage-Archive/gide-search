@@ -28,7 +28,7 @@
             "LabProtocol": {
                 "@id": "http://schema.org/LabProtocol"
             },
-            "labEquipement": {
+            "labEquipment": {
                 "@id": "http://schema.org/labEquipment"
             }
         }

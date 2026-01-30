@@ -10,7 +10,7 @@ As input, we expect a _detached RO-Crate_ consisiting solely of an ro-crate-meta
     - 1.1 Contain a self-describing RO-Crate Metadata Descriptor, with an @id of ro-crate-metadata.json, and a conformsTo of https://w3id.org/ro/crate/X where X equal to or greater than 1.2 (the version which defined detached ro-crates)
     - 1.2 Have a root dataset entity which the ro-crate-madatada.json describes (via the 'about' property).
 2. The root dataset entity has an @id that is an absolute url to a page where the more information can be found about the entry and the data can be obtained.
-3. Use the context term definitions in gide-search-context.jsonld. Additional terms _MAY_ be added, however, terms that are defined in this context _CANNOT_ be changed to point at new IRIs.
+3. Use the context term definitions in gide-search-context.jsonld. Additional terms _MAY_ be added, however, terms that are defined in this context _MUST NOT_ be changed to point at new IRIs.
 
 ### Expected objects
 
@@ -21,7 +21,7 @@ The @graph of the ro-crate-metadata _MUST_ include:
 - One or more Taxon objects, of type _Taxon_, at least linked to the root dataset entity via the _about_ property.
 - One or more Imaging Method objects, of type _DefinedTerm_, at least linked to the root dataset entity via the _measurementMethod_ property.
 - One or more Authors, of type _Person_, linked to the root dataset entity via the _author_ property.
-- Exactly one Publisher object, of type _Organisation_ (or _Person_?), linked to the root dataset entity via the _publisher_ property.
+- Exactly one Publisher object, of type _Organisation_, linked to the root dataset entity via the _publisher_ property.
 
 We _RECOMMEND_ including additional objects:
 - Objects of type _Organisation_ to describe Author _affiliation_
@@ -117,7 +117,6 @@ Note that the requirements requirements below apply to both the json field names
 | name | schema:name | REQUIRED | 1 | SHOULD be the person's name for use in crediting authorship of the Dataset |
 | affiliation | schema:affiliation | Recommended | 0+ | SHOULD be the _Organisations_ a person was a member of at the time of creating or publishing this dataset, that are related to the creation of this dataset. |
 | email | email | optional | 1 | SHOULD be the email address to use to contact the Person about this Dataset |
-| role | email | optional | 0+ | SHOULD be the _CRediT Role_ of the author. |
 
 
 ### Organisation
@@ -169,7 +168,7 @@ If the connetion BioSample - X -> Taxon is present, and Dataset - about -> BioSa
 | --- | --- | :---: | --- | --- |
 | @id | | REQUIRED | 1 | SHOULD be an NCBI taxonomy ID |
 | @type | rdf:type | REQUIRED | 1+ | MUST include Taxon, but may include other types. |
-| scientificName | dwc:scientificName | REQUIRED | 1 | MUST be the full scientific name of the Taxon. |
+| scientificName | dwc:scientificName | REQUIRED | 1 | MUST be the scientific name of the Taxon, following the relevant nomenclature code for the taxon. SHOULD be as complete as possible. |
 | vernacularName | dwc:vernacularName | optional | 1 | SHOULD be a common or vernacular name of the Taxon. |
 
 ### BioSample
