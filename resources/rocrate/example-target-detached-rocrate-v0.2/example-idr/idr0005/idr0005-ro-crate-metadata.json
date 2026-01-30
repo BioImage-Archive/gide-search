@@ -286,34 +286,19 @@
       "@id": "#screen-protocol-2-2",
       "@type": "LabProtocol",
       "name": "library selection protocol",
-      "description": "Nonoverlapping RNAis that were 100- 800 bp in length and minimized repeated sequences were generated for rescreening DECAD-S2 cells (Goshima et al., 2007).",
-      "measurementTechnique": [
-        {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
-        }
-      ]
+      "description": "Nonoverlapping RNAis that were 100- 800 bp in length and minimized repeated sequences were generated for rescreening DECAD-S2 cells (Goshima et al., 2007)."
     },
     {
       "@id": "#screen-protocol-2-3",
       "@type": "LabProtocol",
       "name": "image aquistion and feature extraction protocol",
-      "description": "Plates were imaged using an automated microscope (ImageXpress Micro; Molecular Devices) with a 4_ objective. Images were acquired with MetaMorph (Molecular Devices) and a camera (CoolSNAP HQ; Photometrics).",
-      "measurementTechnique": [
-        {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
-        }
-      ]
+      "description": "Plates were imaged using an automated microscope (ImageXpress Micro; Molecular Devices) with a 4_ objective. Images were acquired with MetaMorph (Molecular Devices) and a camera (CoolSNAP HQ; Photometrics)."
     },
     {
       "@id": "#screen-protocol-2-4",
       "@type": "LabProtocol",
       "name": "hit detection protocol",
-      "description": "For scoring, three images/well were ranked by eye based on aggregation (0 = strong aggregation; 4 = no ag- gregation). A score of >1.5 was considered defective aggregation.",
-      "measurementTechnique": [
-        {
-          "@id": "http://purl.obolibrary.org/obo/FBBI_00000246"
-        }
-      ]
+      "description": "For scoring, three images/well were ranked by eye based on aggregation (0 = strong aggregation; 4 = no ag- gregation). A score of >1.5 was considered defective aggregation."
     },
     {
       "@id": "#total-dataset-size",
