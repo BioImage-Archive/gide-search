@@ -168,6 +168,12 @@
                 },
                 {
                     "@id": "http://purl.obolibrary.org/obo/NCBITaxon_10090"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0016321"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0005694"
                 }
             ],
             "measurementMethod": [
@@ -517,6 +523,16 @@
             "@type": "Taxon",
             "scientificName": "Mus musculus",
             "vernacularName": "mouse"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0016321",
+            "@type": "DefinedTerm",
+            "name": "female meiosis chromosome segregation"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0005694",
+            "@type": "DefinedTerm",
+            "name": "chromosome"
         },
         {
             "@id": "#imaging-protocol-1",

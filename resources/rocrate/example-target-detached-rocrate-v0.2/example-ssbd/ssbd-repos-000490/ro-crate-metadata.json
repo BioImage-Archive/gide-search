@@ -1,6 +1,6 @@
 {
     "@context": [
-        "https://w3id.org/ro/crate/1.2/context",
+        "https://w3id.org/ro/crate/1.1/context",
         {
             "bia": "https://bioimage-archive.org/ro-crate/",
             "obo": "http://purl.obolibrary.org/obo/",
@@ -41,7 +41,7 @@
             "@id": "ro-crate-metadata.json",
             "@type": "CreativeWork",
             "conformsTo": {
-                "@id": "https://w3id.org/ro/crate/1.2"
+                "@id": "https://w3id.org/ro/crate/1.1"
             },
             "about": {
                 "@id": "https://ssbd.riken.jp/repository/ssbd-repos-000490/"
@@ -96,6 +96,27 @@
                 },
                 {
                     "@id": "http://purl.obolibrary.org/obo/NCBITaxon_07227"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0016477"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0051301"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0007155"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0007552"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0016020"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0005634"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/GO_0005811"
                 }
             ],
             "measurementMethod": [
@@ -157,6 +178,41 @@
             "@type": "Taxon",
             "scientificName": "Drosophila melanogaster",
             "vernacularName": "fly"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0016477",
+            "@type": "DefinedTerm",
+            "name": "cell migration"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0051301",
+            "@type": "DefinedTerm",
+            "name": "cell division"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0007155",
+            "@type": "DefinedTerm",
+            "name": "cell adhesion"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0007552",
+            "@type": "DefinedTerm",
+            "name": "metamorphosis"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0016020",
+            "@type": "DefinedTerm",
+            "name": "membrane"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0005634",
+            "@type": "DefinedTerm",
+            "name": "nucleus"
+        },
+        {
+            "@id": "http://purl.obolibrary.org/obo/GO_0005811",
+            "@type": "DefinedTerm",
+            "name": "lipid droplet"
         },
         {
             "@id": "#imaging-protocol-1",
