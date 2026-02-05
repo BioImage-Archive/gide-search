@@ -10,7 +10,7 @@ from gide_search_v2.transformers.base_transformer import Transformer
 class ROCrateIndexTransformer(Transformer):
     FRAME = {
         "@context": [
-            "https://w3id.org/ro/crate/1.1/context",
+            "https://w3id.org/ro/crate/1.2/context",
             {
                 "bia": "https://bioimage-archive.org/ro-crate/",
                 "obo": "http://purl.obolibrary.org/obo/",
