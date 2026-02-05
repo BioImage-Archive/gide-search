@@ -33,6 +33,7 @@ def write_rocrate(
             ro_crate_metadata,
             f,
             indent=2,
+            ensure_ascii=False
         )
 
 
