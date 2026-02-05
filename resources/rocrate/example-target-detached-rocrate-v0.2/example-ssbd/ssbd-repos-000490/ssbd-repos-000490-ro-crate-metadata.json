@@ -38,7 +38,7 @@
     ],
     "@graph": [
         {
-            "@id": "ro-crate-metadata.json",
+            "@id": "ssbd-repos-000490-ro-crate-metadata.json",
             "@type": "CreativeWork",
             "conformsTo": {
                 "@id": "https://w3id.org/ro/crate/1.2"
