@@ -30,7 +30,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
             "about": self._get_bio_samples(bia_search_hit),
             "measurementMethod": self._get_imaging_protocols(bia_search_hit),
             "size": self._get_size(bia_search_hit),
-            "image": self._get_image(bia_search_hit),
+            "thumbnailUrl": self._get_image(bia_search_hit),
         }
 
     def _get_funder(self, bia_grants: list[dict]):
