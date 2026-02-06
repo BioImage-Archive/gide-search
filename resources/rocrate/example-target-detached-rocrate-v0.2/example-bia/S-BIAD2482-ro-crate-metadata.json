@@ -92,6 +92,7 @@
         "Neuroscience",
         "Connectomics"
       ],
+      "license": "https://creativecommons.org/publicdomain/zero/1.0/",
       "name": "All-optical visualization of specific molecules in the ultrastructural context of brain tissue",
       "publisher": {
         "@id": "https://www.ebi.ac.uk/bioimage-archive/"
