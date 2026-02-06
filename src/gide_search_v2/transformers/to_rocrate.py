@@ -19,28 +19,71 @@ class ROCrateTransformer(Transformer):
 
     def _get_ro_crate_context(self) -> str | dict | list[dict | str]:
         return [
-            "https://w3id.org/ro/crate/1.1/context",
+            "https://w3id.org/ro/crate/1.2/context",
+            {
+                "bia": "https://bioimage-archive.org/ro-crate/",
+                "obo": "http://purl.obolibrary.org/obo/",
+                "dwc": "http://rs.tdwg.org/dwc/terms/",
+                "dwciri": "http://rs.tdwg.org/dwc/iri/",
+                "bao": "http://www.bioassayontology.org/bao#",
+                "vernacularName": {"@id": "dwc:vernacularName"},
+                "scientificName": {"@id": "dwc:scientificName"},
+                "hasCellLine": {"@id": "bao:BAO_0002004"},
+                "measurementMethod": {"@id": "dwciri:measurementMethod"},
+                "seeAlso": {"@id": "rdf:seeAlso"},
+                "BioSample": {"@id": "http://schema.org/BioSample"},
+                "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
+                "labEquipment": {"@id": "http://schema.org/labEquipment"},
+            },
+        ]
+
+    def _get_ro_crate_context_with_containers(self) -> list | str:
+        return [
+            "https://w3id.org/ro/crate/1.2/context",
             {
                 "bia": "https://bioimage-archive.org/ro-crate/",
                 "obo": "http://purl.obolibrary.org/obo/",
                 "dwc": "http://rs.tdwg.org/dwc/terms/",
                 "bao": "http://www.bioassayontology.org/bao#",
+                "dwciri": "http://rs.tdwg.org/dwc/iri/",
                 "vernacularName": {"@id": "dwc:vernacularName"},
                 "scientificName": {"@id": "dwc:scientificName"},
-                "hasCellLine": {"@id": "bao:BAO_0002004"},
-                "measurementMethod": {"@id": "dwc:measurementMethod"},
                 "BioSample": {"@id": "http://schema.org/BioSample"},
                 "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
-                "DefinedTerm": {"@id": "http://schema.org/DefinedTerm"},
+                "labEquipment": {"@id": "http://schema.org/labEquipment"},
+                "hasCellLine": {"@id": "bao:BAO_0002004", "@container": "@set"},
+                "measurementMethod": {
+                    "@id": "dwciri:measurementMethod",
+                    "@container": "@set",
+                },
+                "measurementTechnique": {
+                    "@id": "http://schema.org/measurementTechnique",
+                    "@container": "@set",
+                },
+                "about": {"@id": "http://schema.org/about", "@container": "@set"},
+                "citation": {"@id": "http://schema.org/citation", "@container": "@set"},
+                "author": {"@id": "http://schema.org/author", "@container": "@set"},
+                "affiliation": {
+                    "@id": "http://schema.org/affiliation",
+                    "@container": "@set",
+                },
+                "funder": {"@id": "http://schema.org/funder", "@container": "@set"},
+                "keywords": {"@id": "http://schema.org/keywords", "@container": "@set"},
+                "size": {"@id": "http://schema.org/size", "@container": "@set"},
+                "thumbnailUrl": {
+                    "@id": "http://schema.org/thumbnailUrl",
+                    "@container": "@set",
+                },
+                "@type": {"@container": "@set"},
             },
         ]
 
-    def _get_ro_crate_ref(self, entry_id: str) -> dict:
+    def _get_ro_crate_ref(self, entry_url: str, database_id: str) -> dict:
         return {
-            "@id": "ro-crate-metadata.json",
+            "@id": f"{database_id}-ro-crate-metadata.json",
             "@type": "CreativeWork",
-            "conformsTo": {"@id": "https://w3id.org/ro/crate/1.1"},
-            "about": {"@id": entry_id},
+            "conformsTo": {"@id": "https://w3id.org/ro/crate/1.2"},
+            "about": {"@id": entry_url},
         }
 
     def _generate_ref_id(self, key: str, force_unique: bool = False) -> str:

@@ -17,14 +17,23 @@ app = typer.Typer(
 BASE_OUTPUT_DIRECTORY = Path(__file__).parents[2] / "output"
 
 
-def write_rocrate(ro_crate_metadata: dict, output_path: Path) -> None:
+def write_rocrate(
+    ro_crate_metadata: dict, output_path: Path, detached_ro_crate_id: str | None
+) -> None:
     """Write datasets to JSON file."""
     output_path.mkdir(parents=True, exist_ok=True)
-    with open(output_path / "ro-crate-metadata.json", "w") as f:
+    ro_metadata_file_name = (
+        f"{detached_ro_crate_id}-ro-crate-metadata.json"
+        if detached_ro_crate_id
+        else "ro-crate-metadata.json"
+    )
+    metadata_path = output_path / ro_metadata_file_name
+    with open(metadata_path, "w") as f:
         json.dump(
             ro_crate_metadata,
             f,
             indent=2,
+            ensure_ascii=False
         )
 
 
@@ -103,7 +112,7 @@ def generate_bia_rocrate(
             continue
         detached_metadata = transformer.transform(source)
 
-        write_rocrate(detached_metadata, output_path / source["accession_id"])
+        write_rocrate(detached_metadata, output_path, source["accession_id"])
 
 
 def main() -> None:

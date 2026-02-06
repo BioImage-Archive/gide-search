@@ -1,16 +1,31 @@
 from pydantic import AnyUrl, ValidationError
 from pyld import jsonld
 
-from gide_search_v2.schema_search_object import Entry
 from gide_search_v2.transformers.to_rocrate import ROCrateTransformer
 
 
 class BIAROCrateTransformer(ROCrateTransformer):
     generated_ids: set[str]
+    TYPE_ORDER: dict[str, int] = {
+        "CreativeWork": 0,
+        "Dataset": 1,
+        "Person": 2,
+        "Organization": 3,
+        "Grant": 4,
+        "ScholarlyArticle": 5,
+        "Taxon": 6,
+        "BioSample": 7,
+        "LabProtocol": 8,
+        "DefinedTerm": 9,
+        "QuantitiveValue": 10,
+    }
 
     def __init__(self):
         self.generated_ids = set()
         super().__init__()
+
+    def type_rank(self, d):
+        return min(self.TYPE_ORDER.get(t, float("inf")) for t in d.get("@type", []))
 
     def _get_root_dataset(self, bia_search_hit: dict):
 
@@ -30,7 +45,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
             "about": self._get_bio_samples(bia_search_hit),
             "measurementMethod": self._get_imaging_protocols(bia_search_hit),
             "size": self._get_size(bia_search_hit),
-            "image": self._get_image(bia_search_hit),
+            "thumbnailUrl": self._get_image(bia_search_hit),
         }
 
     def _get_funder(self, bia_grants: list[dict]):
@@ -69,19 +84,22 @@ class BIAROCrateTransformer(ROCrateTransformer):
 
     def _get_bio_samples(self, bia_search_hit: dict):
         bio_samples = []
+        taxons_ids = set()
         for dataset in bia_search_hit["dataset"]:
             for bia_bio_sample in dataset["biological_entity"]:
                 taxons = []
                 for bia_taxon in bia_bio_sample["organism_classification"]:
-                    taxons.append(
-                        {
-                            "@type": ["Taxon"],
-                            "vernacularName": bia_taxon["common_name"],
-                            "scientificName": bia_taxon["scientific_name"],
-                            "@id": bia_taxon["ncbi_id"]
-                            or self._generate_ref_id(bia_taxon["common_name"]),
-                        }
-                    )
+                    if bia_taxon["ncbi_id"]:
+                        taxons.append(
+                            {
+                                "@type": ["Taxon"],
+                                "vernacularName": bia_taxon["common_name"],
+                                "scientificName": bia_taxon["scientific_name"],
+                                "@id": bia_taxon["ncbi_id"]
+                                or self._generate_ref_id(bia_taxon["common_name"]),
+                            }
+                        )
+                        taxons_ids.add(str(bia_taxon["ncbi_id"]))
 
                 bio_samples.append(
                     {
@@ -93,22 +111,27 @@ class BIAROCrateTransformer(ROCrateTransformer):
                     }
                 )
 
+        bio_samples += [{"@id": taxon_id} for taxon_id in taxons_ids]
+
         return bio_samples
 
     def _get_imaging_protocols(self, bia_search_hit: dict):
         imaging_protocol = []
+        imaginge_method_ids = set()
         for dataset in bia_search_hit["dataset"]:
             for bia_image_acquisition_protocol in dataset["acquisition_process"]:
                 imaging_methods = []
 
                 for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
-                    imaging_methods.append(
-                        {
-                            "@id": fbbi_id,
-                            "@type": ["DefinedTerm"],
-                            "name": self._get_fbbi_label_from_ontology(fbbi_id),
-                        }
-                    )
+                    if fbbi_id:
+                        imaging_methods.append(
+                            {
+                                "@id": fbbi_id,
+                                "@type": ["DefinedTerm"],
+                                "name": self._get_fbbi_label_from_ontology(fbbi_id),
+                            }
+                        )
+                        imaginge_method_ids.add(str(fbbi_id))
 
                 imaging_protocol.append(
                     {
@@ -124,6 +147,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                         "measurementTechnique": imaging_methods,
                     }
                 )
+        imaging_protocol += [{"@id": imaging_id} for imaging_id in imaginge_method_ids]
         return imaging_protocol
 
     def _get_size(self, bia_search_hit: dict):
@@ -168,9 +192,12 @@ class BIAROCrateTransformer(ROCrateTransformer):
         for bia_author in bia_authors:
             authors.append(
                 {
-                    "@id": bia_author["orcid"]
-                    or self._generate_ref_id(
-                        bia_author["display_name"], force_unique=True
+                    "@id": (
+                        self._standardise_orcid(bia_author["orcid"])
+                        if bia_author["orcid"]
+                        else self._generate_ref_id(
+                            bia_author["display_name"], force_unique=True
+                        )
                     ),
                     "@type": ["Person"],
                     "name": bia_author["display_name"],
@@ -180,6 +207,14 @@ class BIAROCrateTransformer(ROCrateTransformer):
             )
         return authors
 
+    @staticmethod
+    def _standardise_orcid(orcid_id: str) -> str:
+        orcid_base_url = "https://orcid.org/"
+        if not orcid_id.startswith(orcid_base_url):
+            return f"{orcid_base_url}{orcid_id}"
+        else:
+            return orcid_id
+
     def _get_affiliation(self, bia_affiliation_list: list[dict]):
         affiliations = []
         for bia_affiliation in bia_affiliation_list:
@@ -187,7 +222,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                 {
                     "@id": bia_affiliation["rorid"]
                     or self._generate_ref_id(bia_affiliation["display_name"]),
-                    "@type": ["Organisation"],
+                    "@type": ["Organization"],
                     "name": bia_affiliation["display_name"],
                     "address": bia_affiliation["address"],
                     "url": bia_affiliation["website"],
@@ -195,15 +230,21 @@ class BIAROCrateTransformer(ROCrateTransformer):
             )
         return affiliations
 
-    def transform(self, single_object: dict):
+    def transform(self, single_object: dict) -> dict:
         accession_id = single_object["accession_id"]
         entry_uri = f"https://www.ebi.ac.uk/biostudies/bioimages/studies/{accession_id}"
 
         ro_crate_metadata = {
             "@context": self._get_ro_crate_context(),
             "@graph": [
-                self._get_ro_crate_ref(entry_uri),
+                self._get_ro_crate_ref(entry_uri, accession_id),
                 self._get_root_dataset(single_object),
             ],
         }
-        return jsonld.flatten(ro_crate_metadata, ctx=self._get_ro_crate_context())
+        flattened = jsonld.flatten(
+            ro_crate_metadata, ctx=self._get_ro_crate_context_with_containers()
+        )
+        flattened["@context"] = self._get_ro_crate_context()
+        sorted_graph_objects = sorted(flattened["@graph"], key=self.type_rank)
+        flattened["@graph"] = sorted_graph_objects
+        return flattened
