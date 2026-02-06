@@ -1,16 +1,31 @@
 from pydantic import AnyUrl, ValidationError
 from pyld import jsonld
 
-from gide_search_v2.schema_search_object import Entry
 from gide_search_v2.transformers.to_rocrate import ROCrateTransformer
 
 
 class BIAROCrateTransformer(ROCrateTransformer):
     generated_ids: set[str]
+    TYPE_ORDER: dict[str, int] = {
+        "CreativeWork": 0,
+        "Dataset": 1,
+        "Person": 2,
+        "Organization": 3,
+        "Grant": 4,
+        "ScholarlyArticle": 5,
+        "Taxon": 6,
+        "BioSample": 7,
+        "LabProtocol": 8,
+        "DefinedTerm": 9,
+        "QuantitiveValue": 10,
+    }
 
     def __init__(self):
         self.generated_ids = set()
         super().__init__()
+
+    def type_rank(self, d):
+        return min(self.TYPE_ORDER.get(t, float("inf")) for t in d.get("@type", []))
 
     def _get_root_dataset(self, bia_search_hit: dict):
 
@@ -207,7 +222,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                 {
                     "@id": bia_affiliation["rorid"]
                     or self._generate_ref_id(bia_affiliation["display_name"]),
-                    "@type": ["Organisation"],
+                    "@type": ["Organization"],
                     "name": bia_affiliation["display_name"],
                     "address": bia_affiliation["address"],
                     "url": bia_affiliation["website"],
@@ -226,4 +241,10 @@ class BIAROCrateTransformer(ROCrateTransformer):
                 self._get_root_dataset(single_object),
             ],
         }
-        return jsonld.flatten(ro_crate_metadata, ctx=self._get_ro_crate_context())
+        flattened = jsonld.flatten(
+            ro_crate_metadata, ctx=self._get_ro_crate_context_with_containers()
+        )
+        flattened["@context"] = self._get_ro_crate_context()
+        sorted_graph_objects = sorted(flattened["@graph"], key=self.type_rank)
+        flattened["@graph"] = sorted_graph_objects
+        return flattened
