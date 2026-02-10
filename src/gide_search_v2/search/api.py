@@ -33,7 +33,7 @@ class FacetBucket(BaseModel):
 class Facets(BaseModel):
     """Facet aggregations for filtering."""
 
-    sources: list[FacetBucket]
+    publishers: list[FacetBucket]
     organisms: list[FacetBucket]
     imaging_methods: list[FacetBucket]
     years: list[FacetBucket]
@@ -62,6 +62,13 @@ class SearchResponse(BaseModel):
     facets: Facets | None = None
 
 
+def parse_aggregate(aggregations: dict, source_key: str) -> list[FacetBucket]:
+    return [
+        FacetBucket(key=bucket["key"], count=bucket["doc_count"])
+        for bucket in aggregations.get(source_key, {}).get("buckets", [])
+    ]
+
+
 def parse_es_response(es_response: dict) -> SearchResponse:
     """Parse ElasticSearch response into API response, returning Dataset objects with score."""
     # Parse hits - return the source document (Dataset) plus the score
@@ -83,26 +90,20 @@ def parse_es_response(es_response: dict) -> SearchResponse:
         hits.append(valid_hit)
 
     # Parse aggregations for facets
-    aggs = es_response.get("aggregations", {})
+    aggregations = es_response.get("aggregations", {})
 
-    organisms = [
-        FacetBucket(key=bucket["key"], count=bucket["doc_count"])
-        for bucket in aggs.get("organisms", {}).get("buckets", [])
-    ]
-
-    imaging_methods = [
-        FacetBucket(key=bucket["key"], count=bucket["doc_count"])
-        for bucket in aggs.get("imaging_methods", {}).get("buckets", [])
-    ]
+    organisms = parse_aggregate(aggregations, "organisms")
+    imaging_methods = parse_aggregate(aggregations, "imaging_methods")
+    publishers = parse_aggregate(aggregations, "publisher")
 
     facets = (
         Facets(
-            sources=[],
+            publishers=publishers,
             organisms=organisms,
             imaging_methods=imaging_methods,
             years=[],
         )
-        if aggs
+        if aggregations
         else None
     )
 
@@ -111,16 +112,6 @@ def parse_es_response(es_response: dict) -> SearchResponse:
         hits=hits,
         facets=facets,
     )
-
-
-@app.get("/health")
-def health_check() -> dict:
-    """Check API and ElasticSearch health."""
-    es_ok = indexer.ping()
-    return {
-        "status": "healthy" if es_ok else "degraded",
-        "elasticsearch": "connected" if es_ok else "disconnected",
-    }
 
 
 SEARCH_QUERY_DESCRIPTION = """
@@ -175,8 +166,8 @@ field:value, quotes, or wildcards.
 @app.get("/search", response_model=SearchResponse, response_model_by_alias=False)
 def search(
     q: Annotated[str, Query(description=SEARCH_QUERY_DESCRIPTION)] = "",
-    source: Annotated[
-        list[str] | None, Query(description="Filter by source (IDR, SSBD, BIA)")
+    publisher: Annotated[
+        list[str] | None, Query(description="Filter by publisher (IDR, SSBD, BIA)")
     ] = None,
     organism: Annotated[
         list[str] | None, Query(description="Filter by organism name")
@@ -205,6 +196,7 @@ def search(
 
     es_response = indexer.faceted_search(
         query=q,
+        publishers=publisher,
         organisms=organism,
         imaging_methods=imaging_method,
         date_from=date_from,
@@ -221,3 +213,13 @@ def get_entry(entry_id: str) -> dict:
     """Get a single entry by ID."""
     result = indexer.es.get(index=indexer.index_name, id=entry_id)
     return result["_source"]
+
+
+@app.get("/health")
+def health_check() -> dict:
+    """Check API and ElasticSearch health."""
+    es_ok = indexer.ping()
+    return {
+        "status": "healthy" if es_ok else "degraded",
+        "elasticsearch": "connected" if es_ok else "disconnected",
+    }

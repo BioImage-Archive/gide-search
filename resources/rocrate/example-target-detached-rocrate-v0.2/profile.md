@@ -209,8 +209,8 @@ Please note that the LabProtocol type and labEquipment property are draft propos
 | @id | | REQUIRED | 1 | SHOULD a resolvable id, such as a DOI, otherwise a local identifier to the document |
 | @type | rdf:type | REQUIRED | 1+ | MUST include Organisation, but may include other types. |
 | name | schema:name | REQUIRED | 1 | SHOULD be the name or title of the grant. |
+| identifier | schema:identifier | optional | 1 | SHOULD be included if @id is only a local indentifier. |
 | url | schema:url | optional | 1 | SHOULD be a link to a website where more information can be found about the grant. |
-
 
 ### ScholarlyArticle
 

@@ -5,7 +5,7 @@ from typing_extensions import Self
 class JsonLdNode(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,  # accept `id` AND `@id`
-        extra="ignore",
+        extra="allow",
     )
     id: str = Field(alias="@id")
     type: list[str] = Field(alias="@type")
@@ -33,7 +33,7 @@ class Person(JsonLdNode):
 
 class Grant(JsonLdNode):
     name: str
-    url: str | None = None
+    identifier: str | None = None
 
 
 class Publication(JsonLdNode):

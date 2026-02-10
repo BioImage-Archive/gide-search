@@ -46,7 +46,7 @@ INDEX_MAPPING = {
             # Publisher
             "publisher": {
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
@@ -60,7 +60,7 @@ INDEX_MAPPING = {
             "author": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
@@ -99,7 +99,7 @@ INDEX_MAPPING = {
             "citation": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "name": {"type": "text"},
                     "datePublished": {"type": "date"},
@@ -109,7 +109,7 @@ INDEX_MAPPING = {
             "about": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
@@ -122,7 +122,7 @@ INDEX_MAPPING = {
             "measurementMethod": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
@@ -135,7 +135,7 @@ INDEX_MAPPING = {
             "size": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "type": {"type": "keyword"},
                     "value": {"type": "keyword"},
                     "unitText": {"type": "keyword"},
@@ -260,7 +260,7 @@ class DatabaseEntryIndexer:
                     "about.name",
                     "about.description",
                     "measurementMethod.name",
-                    "measurementMethod.name",
+                    "measurementMethod.description",
                 ],
                 "default_operator": "AND",
                 "allow_leading_wildcard": False,
@@ -363,6 +363,7 @@ class DatabaseEntryIndexer:
     def faceted_search(
         self,
         query: str = "",
+        publishers: list[str] | None = None,
         organisms: list[str] | None = None,
         imaging_methods: list[str] | None = None,
         date_from: str | None = None,
@@ -374,6 +375,9 @@ class DatabaseEntryIndexer:
         # Build query
         must = []
         filter_clauses = []
+
+        if publishers:
+            filter_clauses.append({"terms": {"publisher.id": publishers}})
 
         # Text query
         if query:
@@ -422,6 +426,12 @@ class DatabaseEntryIndexer:
                     "terms": {
                         "field": "imaging_method_ids",
                         "size": 50,
+                    },
+                },
+                "publisher": {
+                    "terms": {
+                        "field": "publisher.id",
+                        "size": 10,
                     },
                 },
             },
