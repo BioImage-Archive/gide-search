@@ -47,7 +47,7 @@ def write_rocrate(
 
 
 @data.command(
-    help="Take detacted RO-crates and turn into a single json document for indexing."
+    help="Take detached RO-crates and turn into a single json document for indexing."
 )
 def transform_to_index(
     input_path: Path = typer.Argument(
@@ -369,23 +369,28 @@ def fancy_format_hit(hit: dict, source_field: str, score_field: str):
 
 
 def fancy_format_aggregations(facet_aggregataions: dict, count_field: str):
-
     typer.echo("Facets:")
-    organisms = facet_aggregataions.get("organisms", [])
-    if isinstance(organisms, dict) and "buckets" in organisms:
-        organisms = organisms["buckets"]
-    if len(organisms) > 0:
-        typer.echo("  Organisms:")
-        for facet in organisms[:20]:
-            typer.echo(f"    {facet.get('key')}: {facet.get(count_field)}")
+    print_facet_list(facet_aggregataions, "organisms", "Organisms", count_field)
+    print_facet_list(
+        facet_aggregataions, "imaging_methods", "Imaging methods", count_field
+    )
+    print_facet_list(facet_aggregataions, "publishers", "Publisher", count_field)
+    print_facet_list(
+        facet_aggregataions, "year_published", "Year Published", count_field
+    )
 
-    imaging_methods = facet_aggregataions.get("imaging_methods", [])
-    if isinstance(imaging_methods, dict) and "buckets" in imaging_methods:
-        imaging_methods = imaging_methods["buckets"]
-    if len(imaging_methods) > 0:
-        typer.echo("  Imaging methods:")
-        for facet in imaging_methods[:20]:
-            typer.echo(f"    {facet.get('key')}: {facet.get(count_field)}")
+
+def print_facet_list(
+    facet_aggs: dict, field_name: str, title: str, count_field: str, limit: int = 20
+) -> None:
+    facets = facet_aggs.get(field_name, [])
+    if isinstance(facets, dict) and "buckets" in facets:
+        facets = facets["buckets"]
+    if len(facets) > 0:
+        typer.echo(f"  {title}:")
+        for facet in facets[:limit]:
+            if facet.get(count_field) > 0:
+                typer.echo(f"    {facet.get('key')}: {facet.get(count_field)}")
 
 
 @app.command(help="Run the api.")

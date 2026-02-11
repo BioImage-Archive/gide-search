@@ -1,6 +1,5 @@
 import logging
 import os
-from pathlib import Path
 from typing import Annotated
 
 from fastapi import FastAPI, Query
@@ -36,7 +35,7 @@ class Facets(BaseModel):
     publishers: list[FacetBucket]
     organisms: list[FacetBucket]
     imaging_methods: list[FacetBucket]
-    years: list[FacetBucket]
+    year_published: list[FacetBucket]
 
 
 class Highlights(BaseModel):
@@ -64,7 +63,9 @@ class SearchResponse(BaseModel):
 
 def parse_aggregate(aggregations: dict, source_key: str) -> list[FacetBucket]:
     return [
-        FacetBucket(key=bucket["key"], count=bucket["doc_count"])
+        FacetBucket(
+            key=bucket.get("key_as_string", bucket["key"]), count=bucket["doc_count"]
+        )
         for bucket in aggregations.get(source_key, {}).get("buckets", [])
     ]
 
@@ -94,14 +95,15 @@ def parse_es_response(es_response: dict) -> SearchResponse:
 
     organisms = parse_aggregate(aggregations, "organisms")
     imaging_methods = parse_aggregate(aggregations, "imaging_methods")
-    publishers = parse_aggregate(aggregations, "publisher")
+    publishers = parse_aggregate(aggregations, "publishers")
+    years = parse_aggregate(aggregations, "year_published")
 
     facets = (
         Facets(
             publishers=publishers,
             organisms=organisms,
             imaging_methods=imaging_methods,
-            years=[],
+            year_published=years,
         )
         if aggregations
         else None
@@ -115,51 +117,23 @@ def parse_es_response(es_response: dict) -> SearchResponse:
 
 
 SEARCH_QUERY_DESCRIPTION = """
-Search query string. Supports two modes:
+Search query string.
 
-**Simple search** (default): Just type words to search across all fields including
-title, description, authors, organisms, and imaging methods.
+Supports simple search: Just type words to search across all fields including title, description, authors, organisms, and imaging methods.
 
-**Advanced Lucene syntax**: Use field names, boolean operators, and special syntax
-for precise queries. Automatically detected when you use operators like AND, OR,
-field:value, quotes, or wildcards.
+Also supports single field search, included nested terms on source, authors, about, and measurementMethod:
 
-## Searchable Fields
+| Field |  Example |
+|-------| ---------|
+| `title` |  `title:fluorescence` |
+| `description` | `description:cancer` |
+| `keywords` | `keywords:microscopy` |
+| `identifier` | `S-BIAD2456` |
+| `source.name` | source:BioImage Archive` |
+| `authors.name` | `authors.name:Smith` |
+| `about.scientific_name` |  `about.scientific_name:"Mus musculus"` |
+| `measurementMethod.name` | `measurementMethod.name:confocal` |
 
-| Field | Description | Example |
-|-------|-------------|---------|
-| `title` | entry title (boosted 3x) | `title:fluorescence` |
-| `description` | entry description (boosted 2x) | `description:cancer` |
-| `keywords` | entry keywords (boosted 2x) | `keywords:microscopy` |
-| `source` | Data source | `source:BIA` |
-| `authors.name` | Author names | `authors.name:Smith` |
-| `biosamples.organism.scientific_name` | Scientific organism name | `biosamples.organism.scientific_name:"Mus musculus"` |
-| `image_acquisition_protocols.methods.name` | Imaging method | `image_acquisition_protocols.methods.name:confocal` |
-
-## Lucene Query Syntax
-
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `AND` | Both terms required | `mouse AND brain` |
-| `OR` | Either term | `mouse OR human` |
-| `NOT` | Exclude term | `mouse NOT liver` |
-| `"..."` | Exact phrase | `"confocal microscopy"` |
-| `*` | Wildcard (any chars) | `fluor*` |
-| `?` | Single char wildcard | `m?use` |
-| `~` | Fuzzy search | `flourescence~` |
-| `^N` | Boost term | `cancer^2 tumor` |
-| `[a TO b]` | Range query | `release_date:[2020-01-01 TO 2024-12-31]` |
-| `+` | Must include | `+mouse brain` |
-| `-` | Must exclude | `mouse -liver` |
-| `(...)` | Grouping | `(mouse OR human) AND brain` |
-
-## Examples
-
-- `fluorescence` - Simple search across all fields
-- `title:cancer AND authors.name:Smith` - Studies about cancer by Smith
-- `"Mus musculus" AND confocal` - Mouse studies using confocal
-- `source:BIA AND fluor*` - BIA studies with fluorescence-related terms
-- `description:(brain OR neuron) AND NOT liver` - Brain/neuron studies, excluding liver
 """
 
 

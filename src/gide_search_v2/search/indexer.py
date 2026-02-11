@@ -7,6 +7,7 @@ from pathlib import Path
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
+
 # Pattern to detect Lucene query syntax
 LUCENE_SYNTAX_PATTERN = re.compile(
     r"""
@@ -28,11 +29,9 @@ INDEX_NAME = "gide-datasets"
 # ElasticSearch mapping for ImagingDatasetSummary documents
 INDEX_MAPPING = {
     "mappings": {
+        "dynamic": "false",
         "properties": {
-            # JSON-LD core
             "id": {"type": "keyword"},
-            "type": {"type": "keyword"},
-            # Dataset core
             "identifier": {"type": "keyword"},
             "name": {
                 "type": "text",
@@ -43,11 +42,9 @@ INDEX_MAPPING = {
             "datePublished": {"type": "date"},
             "license": {"type": "keyword"},
             "keywords": {"type": "keyword"},
-            # Publisher
             "publisher": {
                 "properties": {
                     "id": {"type": "keyword"},
-                    "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
                         "fields": {"keyword": {"type": "keyword"}},
@@ -61,7 +58,6 @@ INDEX_MAPPING = {
                 "type": "nested",
                 "properties": {
                     "id": {"type": "keyword"},
-                    "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
                         "fields": {"keyword": {"type": "keyword"}},
@@ -71,7 +67,6 @@ INDEX_MAPPING = {
                         "type": "nested",
                         "properties": {
                             "@id": {"type": "keyword"},
-                            "type": {"type": "keyword"},
                             "name": {
                                 "type": "text",
                                 "fields": {"keyword": {"type": "keyword"}},
@@ -87,7 +82,6 @@ INDEX_MAPPING = {
                 "type": "nested",
                 "properties": {
                     "@id": {"type": "keyword"},
-                    "type": {"type": "keyword"},
                     "name": {
                         "type": "text",
                         "fields": {"keyword": {"type": "keyword"}},
@@ -100,9 +94,7 @@ INDEX_MAPPING = {
                 "type": "nested",
                 "properties": {
                     "id": {"type": "keyword"},
-                    "type": {"type": "keyword"},
                     "name": {"type": "text"},
-                    "datePublished": {"type": "date"},
                 },
             },
             # Subject
@@ -116,6 +108,14 @@ INDEX_MAPPING = {
                         "fields": {"keyword": {"type": "keyword"}},
                     },
                     "description": {"type": "text"},
+                    "scientificName": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
+                    "vernacularName": {
+                        "type": "text",
+                        "fields": {"keyword": {"type": "keyword"}},
+                    },
                 },
             },
             # Measurement methods
@@ -131,21 +131,10 @@ INDEX_MAPPING = {
                     "description": {"type": "text"},
                 },
             },
-            # Dataset size / quantitative values
-            "size": {
-                "type": "nested",
-                "properties": {
-                    "id": {"type": "keyword"},
-                    "type": {"type": "keyword"},
-                    "value": {"type": "keyword"},
-                    "unitText": {"type": "keyword"},
-                    "unitCode": {"type": "keyword"},
-                },
-            },
             # Pre-computed facet IDs for faster filtering and aggregation
             "taxon_ids": {"type": "keyword"},
             "imaging_method_ids": {"type": "keyword"},
-        }
+        },
     },
     "settings": {
         "number_of_shards": 1,
@@ -247,7 +236,31 @@ class DatabaseEntryIndexer:
         return bool(LUCENE_SYNTAX_PATTERN.search(query))
 
     def _build_lucene_query(self, query: str) -> dict:
-        """Build a query_string query for Lucene syntax searches."""
+        """Build a query that handles both regular and nested field queries."""
+        # Detect if query uses nested field syntax (e.g., "about.name:drosophila")
+        nested_field_pattern = re.compile(r"^(\w+)\.(\w+):(.+)$")
+        match = nested_field_pattern.match(query.strip())
+
+        if match:
+            nested_path, field, search_value = match.groups()
+            # Only handle known nested fields
+            if nested_path in ["about", "author", "measurementMethod", "source"]:
+                return {
+                    "nested": {
+                        "path": nested_path,
+                        "query": {
+                            "match": {
+                                f"{nested_path}.{field}": {
+                                    "query": search_value,
+                                    "fuzziness": "AUTO",
+                                    "operator": "and",
+                                }
+                            }
+                        },
+                    }
+                }
+
+        # Fall back to query_string for non-nested queries (only non-nested fields)
         return {
             "query_string": {
                 "query": query,
@@ -256,11 +269,6 @@ class DatabaseEntryIndexer:
                     "description^2",
                     "keywords^2",
                     "identifier",
-                    "author.name",
-                    "about.name",
-                    "about.description",
-                    "measurementMethod.name",
-                    "measurementMethod.description",
                 ],
                 "default_operator": "AND",
                 "allow_leading_wildcard": False,
@@ -428,10 +436,17 @@ class DatabaseEntryIndexer:
                         "size": 50,
                     },
                 },
-                "publisher": {
+                "publishers": {
                     "terms": {
                         "field": "publisher.id",
                         "size": 10,
+                    },
+                },
+                "year_published": {
+                    "date_histogram": {
+                        "field": "datePublished",
+                        "calendar_interval": "year",
+                        "format": "yyyy",
                     },
                 },
             },

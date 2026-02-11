@@ -1,10 +1,13 @@
 import json
 from pathlib import Path
 
+from pydantic import ValidationError
 from pyld import jsonld
-
+import logging
 from gide_search_v2.search.schema_search_object import Dataset, IndexableDataset
 from gide_search_v2.transformers.base_transformer import Transformer
+
+logger = logging.getLogger("__main__." + __name__)
 
 
 class ROCrateIndexTransformer(Transformer):
@@ -73,7 +76,13 @@ class ROCrateIndexTransformer(Transformer):
 
         framed_doc.pop("@context")
 
-        dataset = IndexableDataset.model_validate(framed_doc)
+        try:
+            dataset = IndexableDataset.model_validate(framed_doc)
+        except ValidationError as e:
+            logger.error(
+                f"Validation failed for: {framed_doc.get("@id", "Unknown object")}"
+            )
+            raise e
 
         return dataset.model_dump(by_alias=False)
 
