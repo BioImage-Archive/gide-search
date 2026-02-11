@@ -35,8 +35,8 @@ build-backend = "hatchling.build"
 packages = ["src/gide_search"]
 
 [project.scripts]
-gide-search = "gide_search.cli:main"
-gide-search-2 = "gide_search_v2.cli:main"
+gide-search-v1 = "gide_search.cli:main"
+gide-search = "gide_search_v2.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
