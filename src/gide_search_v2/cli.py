@@ -95,6 +95,10 @@ def transform_to_index(
     with open(output_path / DEFAULT_INDEX_FILE, "w") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
 
+    typer.echo(
+        f"Created indexable document containing {len(results)} datasets from {len(metadata_files)} ro-crates."
+    )
+
 
 @data.command(
     help="Generate detached ro-crate documents from results in the BIA search API."
