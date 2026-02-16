@@ -80,8 +80,8 @@ def parse_es_response(es_response: dict) -> SearchResponse:
         entry_hit["entry"] = hit["_source"]
         entry_hit["score"] = hit["_score"] or 0.0
 
-        if "_highlight" in hit:
-            entry_hit["highlights"] = hit["_highlight"]
+        if "highlight" in hit:
+            entry_hit["highlight"] = hit["highlight"]
 
         try:
             valid_hit = EntryHit.model_validate(entry_hit, by_name=True, by_alias=False)
