@@ -37,6 +37,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
             "name": bia_search_hit["title"],
             "description": bia_search_hit["description"],
             "datePublished": str(bia_search_hit["release_date"]),
+            "license": bia_search_hit["licence"],
             "keywords": bia_search_hit["keyword"],
             "publisher": self._get_publisher(),
             "author": self._get_authors(bia_search_hit["author"]),
@@ -56,11 +57,13 @@ class BIAROCrateTransformer(ROCrateTransformer):
             except ValidationError:
                 grant_id_url = self._generate_ref_id(bia_grant["id"])
 
+            # Use funder name:
+
             funders.append(
                 {
                     "@id": grant_id_url,
                     "@type": ["Grant"],
-                    "name": None,
+                    "name": bia_grant.get("funder", [{}])[0].get("display_name"),
                     # TODO: use name from grant funder?
                     "identifier": bia_grant["id"],
                 }

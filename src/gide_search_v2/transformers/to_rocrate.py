@@ -60,6 +60,7 @@ class ROCrateTransformer(Transformer):
                     "@id": "http://schema.org/measurementTechnique",
                     "@container": "@set",
                 },
+                "seeAlso": {"@id": "rdf:seeAlso", "@container": "@set"},
                 "about": {"@id": "http://schema.org/about", "@container": "@set"},
                 "citation": {"@id": "http://schema.org/citation", "@container": "@set"},
                 "author": {"@id": "http://schema.org/author", "@container": "@set"},
