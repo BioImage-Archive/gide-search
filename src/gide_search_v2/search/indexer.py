@@ -364,6 +364,7 @@ class DatabaseEntryIndexer:
             "query": self._build_text_query(query),
             "size": size,
             "from": from_,
+            "highlight": {"fields": {"*": {}}},
         }
 
         return self.es.search(index=self.index_name, body=body)
@@ -450,6 +451,7 @@ class DatabaseEntryIndexer:
                     },
                 },
             },
+            "highlight": {"fields": {"*": {}}},
         }
 
         return self.es.search(index=self.index_name, body=body)

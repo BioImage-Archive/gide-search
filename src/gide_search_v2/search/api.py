@@ -38,19 +38,13 @@ class Facets(BaseModel):
     year_published: list[FacetBucket]
 
 
-class Highlights(BaseModel):
-    """Highlighted text fragments from search matches."""
 
-    title: str | None = None
-    description: list[str] | None = None
-    keywords: list[str] | None = None
 
 
 class EntryHit(BaseModel):
     id: str
     entry: Dataset
     score: float
-    highlights: Highlights | None = None
 
 
 class SearchResponse(BaseModel):
@@ -80,8 +74,7 @@ def parse_es_response(es_response: dict) -> SearchResponse:
         entry_hit["entry"] = hit["_source"]
         entry_hit["score"] = hit["_score"] or 0.0
 
-        if "highlight" in hit:
-            entry_hit["highlight"] = hit["highlight"]
+        # TODO: parse highlight usefully
 
         try:
             valid_hit = EntryHit.model_validate(entry_hit, by_name=True, by_alias=False)
