@@ -1,30 +1,14 @@
 """ElasticSearch indexer for imaging dataset data."""
 
 import json
-import re
 from pathlib import Path
 
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
 
-# Pattern to detect Lucene query syntax
-LUCENE_SYNTAX_PATTERN = re.compile(
-    r"""
-    \b(AND|OR|NOT)\b |     # Boolean operators
-    \w+:\s*\S |            # Field:value syntax
-    [+\-!] |               # Required/prohibited operators
-    \*|\? |                # Wildcards
-    \~\d* |                # Fuzzy/proximity
-    \[.*\sTO\s.*\] |       # Range queries
-    \^[\d.]+ |             # Boosting
-    \"[^\"]+\"             # Quoted phrases (could be intentional)
-    """,
-    re.VERBOSE | re.IGNORECASE,
-)
-
 # Index name
-INDEX_NAME = "gide-datasets"
+GIDE_DATASETS_INDEX = "gide-datasets"
 
 # ElasticSearch mapping for ImagingDatasetSummary documents
 INDEX_MAPPING = {
@@ -134,6 +118,8 @@ INDEX_MAPPING = {
             # Pre-computed facet IDs for faster filtering and aggregation
             "taxon_ids": {"type": "keyword"},
             "imaging_method_ids": {"type": "keyword"},
+            # No need to index the urls for search, but used for field exist queries
+            "thumbnailUrl": {"type": "keyword", "index": False, "doc_values": True},
         },
     },
     "settings": {
@@ -156,7 +142,7 @@ class DatabaseEntryIndexer:
     def __init__(
         self,
         es_url: str = "http://localhost:9200",
-        index_name: str = INDEX_NAME,
+        index_name: str = GIDE_DATASETS_INDEX,
         api_key: str | None = None,
     ):
         if api_key:
@@ -231,53 +217,8 @@ class DatabaseEntryIndexer:
         result = self.es.count(index=self.index_name)
         return result["count"]
 
-    def _is_lucene_syntax(self, query: str) -> bool:
-        """Detect if query contains Lucene query syntax."""
-        return bool(LUCENE_SYNTAX_PATTERN.search(query))
-
-    def _build_lucene_query(self, query: str) -> dict:
-        """Build a query that handles both regular and nested field queries."""
-        # Detect if query uses nested field syntax (e.g., "about.name:drosophila")
-        nested_field_pattern = re.compile(r"^(\w+)\.(\w+):(.+)$")
-        match = nested_field_pattern.match(query.strip())
-
-        if match:
-            nested_path, field, search_value = match.groups()
-            # Only handle known nested fields
-            if nested_path in ["about", "author", "measurementMethod", "source"]:
-                return {
-                    "nested": {
-                        "path": nested_path,
-                        "query": {
-                            "match": {
-                                f"{nested_path}.{field}": {
-                                    "query": search_value,
-                                    "fuzziness": "AUTO",
-                                    "operator": "and",
-                                }
-                            }
-                        },
-                    }
-                }
-
-        # Fall back to query_string for non-nested queries (only non-nested fields)
-        return {
-            "query_string": {
-                "query": query,
-                "fields": [
-                    "name^3",
-                    "description^2",
-                    "keywords^2",
-                    "identifier",
-                ],
-                "default_operator": "AND",
-                "allow_leading_wildcard": False,
-                "analyze_wildcard": True,
-            },
-        }
-
     def _build_simple_query(self, query: str) -> dict:
-        """Build a simple text query that properly searches nested fields."""
+        """Build a simple text query that searches nested fields."""
         return {
             "bool": {
                 "should": [
@@ -348,9 +289,6 @@ class DatabaseEntryIndexer:
         }
 
     def _build_text_query(self, query: str) -> dict:
-        """Build a text query, using Lucene syntax if detected."""
-        if self._is_lucene_syntax(query):
-            return self._build_lucene_query(query)
         return self._build_simple_query(query)
 
     def search(
@@ -375,8 +313,10 @@ class DatabaseEntryIndexer:
         publishers: list[str] | None = None,
         organisms: list[str] | None = None,
         imaging_methods: list[str] | None = None,
+        licenses: list[str] | None = None,
         date_from: str | None = None,
         date_to: str | None = None,
+        require_thumbnail: bool = False,
         size: int = 10,
         from_: int = 0,
     ) -> dict:
@@ -384,6 +324,9 @@ class DatabaseEntryIndexer:
         # Build query
         must = []
         filter_clauses = []
+
+        if licenses:
+            filter_clauses.append({"terms": {"license": licenses}})
 
         if publishers:
             filter_clauses.append({"terms": {"publisher.id": publishers}})
@@ -409,6 +352,9 @@ class DatabaseEntryIndexer:
                 date_range["lte"] = date_to
             filter_clauses.append({"range": {"datePublished": date_range}})
 
+        if require_thumbnail:
+            filter_clauses.append({"exists": {"field": "thumbnailUrl"}})
+
         # Build final query
         if must or filter_clauses:
             bool_query: dict = {}
@@ -420,11 +366,19 @@ class DatabaseEntryIndexer:
         else:
             main_query = {"match_all": {}}
 
+        print(main_query)
+
         body = {
             "query": main_query,
             "size": size,
             "from": from_,
             "aggs": {
+                "license": {
+                    "terms": {
+                        "field": "license",
+                        "size": 50,
+                    }
+                },
                 "organisms": {
                     "terms": {
                         "field": "taxon_ids",

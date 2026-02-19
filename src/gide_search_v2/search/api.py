@@ -36,9 +36,7 @@ class Facets(BaseModel):
     organisms: list[FacetBucket]
     imaging_methods: list[FacetBucket]
     year_published: list[FacetBucket]
-
-
-
+    license: list[FacetBucket]
 
 
 class EntryHit(BaseModel):
@@ -90,6 +88,7 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     imaging_methods = parse_aggregate(aggregations, "imaging_methods")
     publishers = parse_aggregate(aggregations, "publishers")
     years = parse_aggregate(aggregations, "year_published")
+    license = parse_aggregate(aggregations, "license")
 
     facets = (
         Facets(
@@ -97,6 +96,7 @@ def parse_es_response(es_response: dict) -> SearchResponse:
             organisms=organisms,
             imaging_methods=imaging_methods,
             year_published=years,
+            license=license,
         )
         if aggregations
         else None
@@ -114,19 +114,6 @@ Search query string.
 
 Supports simple search: Just type words to search across all fields including title, description, authors, organisms, and imaging methods.
 
-Also supports single field search, included nested terms on source, authors, about, and measurementMethod:
-
-| Field |  Example |
-|-------| ---------|
-| `title` |  `title:fluorescence` |
-| `description` | `description:cancer` |
-| `keywords` | `keywords:microscopy` |
-| `identifier` | `S-BIAD2456` |
-| `source.name` | source:BioImage Archive` |
-| `authors.name` | `authors.name:Smith` |
-| `about.scientific_name` |  `about.scientific_name:"Mus musculus"` |
-| `measurementMethod.name` | `measurementMethod.name:confocal` |
-
 """
 
 
@@ -142,6 +129,7 @@ def search(
     imaging_method: Annotated[
         list[str] | None, Query(description="Filter by imaging method")
     ] = None,
+    license: Annotated[list[str] | None, Query(description="Filter by license")] = None,
     year_from: Annotated[
         int | None, Query(description="Filter by release year (from)")
     ] = None,
@@ -150,6 +138,9 @@ def search(
     ] = None,
     size: Annotated[int, Query(ge=1, le=100, description="Results per page")] = 20,
     offset: Annotated[int, Query(ge=0, description="Result offset")] = 0,
+    require_thumbnail: Annotated[
+        bool, Query(description="Filter by whether any thumbnails are present.")
+    ] = False,
 ) -> SearchResponse:
     """
     Search studies with optional filters.
@@ -166,8 +157,10 @@ def search(
         publishers=publisher,
         organisms=organism,
         imaging_methods=imaging_method,
+        licenses=license,
         date_from=date_from,
         date_to=date_to,
+        require_thumbnail=require_thumbnail,
         size=size,
         from_=offset,
     )

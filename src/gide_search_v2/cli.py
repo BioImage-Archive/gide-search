@@ -221,6 +221,18 @@ def search(
         "-m",
         help="Imaging method id to filter by (repeatable)",
     ),
+    licenses: list[str] | None = typer.Option(
+        None,
+        "--license",
+        "-l",
+        help="Lincenses to filter by by (repeatable)",
+    ),
+    publishers: list[str] | None = typer.Option(
+        None,
+        "--publisher",
+        "-p",
+        help="Dataset publishers to filter by by (repeatable)",
+    ),
     date_from: str | None = typer.Option(
         None,
         "--date-from",
@@ -230,6 +242,11 @@ def search(
         None,
         "--date-to",
         help="End date (YYYY-MM-DD) to filter `datePublished`",
+    ),
+    require_thumbnail: bool = typer.Option(
+        False,
+        "--require-thumbnail",
+        help="End year to filter `datePublished`",
     ),
 ) -> None:
     indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key)
@@ -243,9 +260,12 @@ def search(
             query=query,
             organisms=organisms,
             imaging_methods=imaging_methods,
+            licenses=licenses,
+            publishers=publishers,
             date_from=date_from,
             date_to=date_to,
             size=limit,
+            require_thumbnail=require_thumbnail,
         )
     else:
         results = indexer.search(query, size=limit)
@@ -304,6 +324,18 @@ def search_api(
         "-m",
         help="Imaging method id to filter by (repeatable)",
     ),
+    licenses: list[str] | None = typer.Option(
+        None,
+        "--license",
+        "-l",
+        help="Lincenses to filter by by (repeatable)",
+    ),
+    publishers: list[str] | None = typer.Option(
+        None,
+        "--publisher",
+        "-p",
+        help="Dataset publishers to filter by by (repeatable)",
+    ),
     year_from: str | None = typer.Option(
         None,
         "--date-from",
@@ -312,6 +344,11 @@ def search_api(
     year_to: str | None = typer.Option(
         None,
         "--date-to",
+        help="End year to filter `datePublished`",
+    ),
+    require_thumbnail: bool = typer.Option(
+        False,
+        "--require-thumbnail",
         help="End year to filter `datePublished`",
     ),
 ) -> None:
@@ -324,6 +361,12 @@ def search_api(
         params["organism"] = organisms
     if imaging_methods:
         params["imaging_method"] = imaging_methods
+    if licenses:
+        params["license"] = licenses
+    if publishers:
+        params["publishers"] = licenses
+    if require_thumbnail:
+        params["require_thumbnail"] = True
 
     # API expects year_from/year_to as integers; extract year if full dates provided
     if year_from:
@@ -382,6 +425,7 @@ def fancy_format_aggregations(facet_aggregataions: dict, count_field: str):
     print_facet_list(
         facet_aggregataions, "year_published", "Year Published", count_field
     )
+    print_facet_list(facet_aggregataions, "license", "License", count_field)
 
 
 def print_facet_list(
@@ -394,7 +438,9 @@ def print_facet_list(
         typer.echo(f"  {title}:")
         for facet in facets[:limit]:
             if facet.get(count_field) > 0:
-                typer.echo(f"    {facet.get('key')}: {facet.get(count_field)}")
+                typer.echo(
+                    f"    {facet.get('key_as_string') or facet.get('key')}: {facet.get(count_field)}"
+                )
 
 
 @app.command(help="Run the api.")
