@@ -2,6 +2,7 @@ from pydantic import AnyUrl, ValidationError
 from pyld import jsonld
 
 from gide_search_v2.transformers.to_rocrate import ROCrateTransformer
+from gide_search_v2.utils.ontology_term_finder import OntologyTermFinder
 
 
 class BIAROCrateTransformer(ROCrateTransformer):
@@ -20,8 +21,9 @@ class BIAROCrateTransformer(ROCrateTransformer):
         "QuantitiveValue": 10,
     }
 
-    def __init__(self):
+    def __init__(self, ontology_term_finder: OntologyTermFinder):
         self.generated_ids = set()
+        self.ontology_term_finder = ontology_term_finder
         super().__init__()
 
     def type_rank(self, d):
@@ -92,14 +94,25 @@ class BIAROCrateTransformer(ROCrateTransformer):
             for bia_bio_sample in dataset["biological_entity"]:
                 taxons = []
                 for bia_taxon in bia_bio_sample["organism_classification"]:
+                    if not bia_taxon["ncbi_id"]:
+                        search_term = (
+                            bia_taxon["scientific_name"] or bia_taxon["common_name"]
+                        )
+                        possible_terms = (
+                            self.ontology_term_finder.find_iri_for_class_in_ontology(
+                                "ncbitaxon", search_term
+                            )
+                        )
+                        if len(possible_terms) > 0:
+                            bia_taxon["ncbi_id"] = possible_terms[0][0]
+
                     if bia_taxon["ncbi_id"]:
                         taxons.append(
                             {
                                 "@type": ["Taxon"],
                                 "vernacularName": bia_taxon["common_name"],
                                 "scientificName": bia_taxon["scientific_name"],
-                                "@id": bia_taxon["ncbi_id"]
-                                or self._generate_ref_id(bia_taxon["common_name"]),
+                                "@id": bia_taxon["ncbi_id"],
                             }
                         )
                         taxons_ids.add(str(bia_taxon["ncbi_id"]))
@@ -120,13 +133,33 @@ class BIAROCrateTransformer(ROCrateTransformer):
 
     def _get_imaging_protocols(self, bia_search_hit: dict):
         imaging_protocol = []
-        imaginge_method_ids = set()
+        imaging_method_ids = set()
         for dataset in bia_search_hit["dataset"]:
             for bia_image_acquisition_protocol in dataset["acquisition_process"]:
                 imaging_methods = []
 
-                for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
-                    if fbbi_id:
+                if len(bia_image_acquisition_protocol["fbbi_id"]) == 0:
+                    for imaging_method_name in bia_image_acquisition_protocol[
+                        "imaging_method_name"
+                    ]:
+                        terms = (
+                            self.ontology_term_finder.find_iri_for_class_in_ontology(
+                                "fbbi",
+                                imaging_method_name,
+                                "http://purl.obolibrary.org/obo/FBbi_00000265",
+                            )
+                        )
+                        if len(terms) > 0:
+                            imaging_methods.append(
+                                {
+                                    "@id": terms[0][0],
+                                    "@type": ["DefinedTerm"],
+                                    "name": terms[0][1][0],
+                                }
+                            )
+                            imaging_method_ids.add(terms[0][0])
+                else:
+                    for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
                         imaging_methods.append(
                             {
                                 "@id": fbbi_id,
@@ -134,7 +167,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                                 "name": self._get_fbbi_label_from_ontology(fbbi_id),
                             }
                         )
-                        imaginge_method_ids.add(str(fbbi_id))
+                        imaging_method_ids.add(fbbi_id)
 
                 imaging_protocol.append(
                     {
@@ -150,7 +183,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                         "measurementTechnique": imaging_methods,
                     }
                 )
-        imaging_protocol += [{"@id": imaging_id} for imaging_id in imaginge_method_ids]
+        imaging_protocol += [{"@id": imaging_id} for imaging_id in imaging_method_ids]
         return imaging_protocol
 
     def _get_size(self, bia_search_hit: dict):
