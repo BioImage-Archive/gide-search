@@ -7,6 +7,10 @@
       "dwc": "http://rs.tdwg.org/dwc/terms/",
       "dwciri": "http://rs.tdwg.org/dwc/iri/",
       "bao": "http://www.bioassayontology.org/bao#",
+      "datePublished": {
+        "@id": "",
+        "@type": "xsd:date"
+      },
       "vernacularName": {
         "@id": "dwc:vernacularName"
       },
@@ -121,10 +125,8 @@
         }
       ],
       "thumbnailUrl": [
-        "https://idr.openmicroscopy.org/webclient/?show=well-555729",
-        "https://idr.openmicroscopy.org/webclient/img_detail/1013924/",
-        "https://idr.openmicroscopy.org/webclient/?show=well-547674",
-        "https://idr.openmicroscopy.org/webclient/img_detail/928607/"
+        "https://idr.openmicroscopy.org/webgateway/render_thumbnail/1013924/",
+        "https://idr.openmicroscopy.org/webgateway/render_thumbnail/928607/"
       ],
       "size": [
         {
