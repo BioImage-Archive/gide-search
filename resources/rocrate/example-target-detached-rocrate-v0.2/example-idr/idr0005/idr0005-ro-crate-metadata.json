@@ -8,7 +8,7 @@
       "dwciri": "http://rs.tdwg.org/dwc/iri/",
       "bao": "http://www.bioassayontology.org/bao#",
       "datePublished": {
-        "@id": "",
+        "@id": "http://schema.org/datePublished",
         "@type": "xsd:date"
       },
       "vernacularName": {
