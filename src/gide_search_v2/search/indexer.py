@@ -366,8 +366,6 @@ class DatabaseEntryIndexer:
         else:
             main_query = {"match_all": {}}
 
-        print(main_query)
-
         body = {
             "query": main_query,
             "size": size,
