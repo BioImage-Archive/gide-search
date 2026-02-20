@@ -8,6 +8,7 @@ dependencies = [
     "elasticsearch>=8.0.0,<9.0.0",
     "fastapi>=0.127.1",
     "httpx>=0.28.1",
+    "ols-client>=0.2.1",
     "pydantic>=2.12.5",
     "pyld>=2.0.4",
     "rdflib>=7.5.0",

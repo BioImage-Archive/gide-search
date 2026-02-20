@@ -1,10 +1,11 @@
 import json
+import logging
 from pathlib import Path
 
 from pydantic import ValidationError
 from pyld import jsonld
-import logging
-from gide_search_v2.search.schema_search_object import Dataset, IndexableDataset
+
+from gide_search_v2.search.schema_search_object import IndexableDataset
 from gide_search_v2.transformers.base_transformer import Transformer
 
 logger = logging.getLogger("__main__." + __name__)

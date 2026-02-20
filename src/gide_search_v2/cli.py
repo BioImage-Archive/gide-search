@@ -12,6 +12,7 @@ from tqdm import tqdm
 from gide_search_v2.search.indexer import DatabaseEntryIndexer
 
 from .transformers import BIAROCrateTransformer, ROCrateIndexTransformer
+from .utils.ontology_term_finder import OntologyTermFinder
 
 logger = logging.getLogger()
 
@@ -124,7 +125,7 @@ def generate_bia_rocrate(
     response.raise_for_status()
 
     data = response.json().get("hits", {}).get("hits", [])
-    transformer = BIAROCrateTransformer()
+    transformer = BIAROCrateTransformer(OntologyTermFinder())
     for hit in tqdm(data, desc="Generating BIA RO-Crates"):
         source = hit["_source"]
         if not source["dataset"]:
