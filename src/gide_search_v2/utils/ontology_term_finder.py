@@ -37,6 +37,22 @@ class OntologyTermFinder:
         )
 
     @cache
+    def fetch_labels_for_term(self, ontology: str, term_iri: str):
+        if ontology not in self.avaliable_ontology_ids:
+            raise KeyError(f"{ontology} is not in ols")
+
+        response = self.ebi_client.get_term(ontology, term_iri)
+
+        term_info = response["terms"][0]
+
+        return {
+            "iri": term_iri,
+            "label": term_info["label"],
+            "additional_labels": term_info.get("synonyms", []),
+            "short_id": term_info.get("obo", []) + term_info.get("synonyms", []),
+        }
+
+    @cache
     def _get_iri_for_class_in_ontology(
         self, ontology: str, search_terms: str, required_superclass: str | None = None
     ):

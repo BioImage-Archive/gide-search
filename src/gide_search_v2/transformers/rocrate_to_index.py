@@ -87,18 +87,4 @@ class ROCrateIndexTransformer(Transformer):
 
         return dataset.model_dump(by_alias=False)
 
-    def collect_objects(self, path: str | Path):
-        path = Path(path)
-
-        if path.is_dir():
-            path = path / "ro-crate-metadata.json"
-
-        if not (path.is_file and path.name == "ro-crate-metadata.json" and path.exists):
-            if not path.is_file:
-                print(path.is_file)
-            raise ValueError(f"Needs {path} to exist to process ro-crate-metadata.json")
-
-        with open(path) as f:
-            document = json.load(f)
-
-        return document
+        
