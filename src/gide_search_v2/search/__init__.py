@@ -2,10 +2,10 @@
 
 from .schema_search_object import (
     BioSample,
-    CellLine,
-    Entry,
+    Dataset,
+    DefinedTerm,
     Grant,
-    MeasurementMethod,
+    LabProtocol,
     Organization,
     Person,
     Publication,
@@ -20,9 +20,9 @@ __all__ = [
     "Grant",
     "Publication",
     "Taxon",
-    "CellLine",
     "BioSample",
     "Publication",
-    "MeasurementMethod",
-    "Entry",
+    "LabProtocol",
+    "Dataset",
+    "DefinedTerm",
 ]

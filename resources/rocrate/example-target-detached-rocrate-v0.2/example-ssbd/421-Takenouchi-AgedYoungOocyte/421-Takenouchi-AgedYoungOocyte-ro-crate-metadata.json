@@ -7,6 +7,10 @@
             "dwc": "http://rs.tdwg.org/dwc/terms/",
             "dwciri": "http://rs.tdwg.org/dwc/iri/",
             "bao": "http://www.bioassayontology.org/bao#",
+            "datePublished": {
+                "@id": "http://schema.org/datePublished",
+                "@type": "xsd:date"
+            },
             "vernacularName": {
                 "@id": "dwc:vernacularName"
             },
@@ -540,10 +544,10 @@
             "name": "confocal microscopy (Fbbi:00000251)",
             "description": "confocal microscopy (Fbbi:00000251), distribution of a specific nucleic acid sequence, fluorescence emission, living tissue by Zeiss LSM780, Zeiss 40×C-Apochromat 1.2NA",
             "measurementTechnique": [
-		{
-               		"@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
-            	}
-	    ],
+                {
+                    "@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
+                }
+            ],
             "labEquipment": "Zeiss LSM780, Zeiss 40×C-Apochromat 1.2NA"
         },
         {
@@ -552,13 +556,13 @@
             "name": "confocal microscopy (Fbbi:00000251), time lapse microscopy (FBbi:00000249)",
             "description": "confocal microscopy (Fbbi:00000251), time lapse microscopy (FBbi:00000249), distribution of a specific nucleic acid sequence, fluorescence emission, living tissue by Zeiss LSM780, Zeiss 40×C-Apochromat 1.2NA",
             "measurementTechnique": [
-		{
-               		"@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
-            	},
-		{
-               		"@id": "http://purl.obolibrary.org/obo/FBbi_00000249"
-            	}
-	    ],
+                {
+                    "@id": "http://purl.obolibrary.org/obo/FBbi_00000251"
+                },
+                {
+                    "@id": "http://purl.obolibrary.org/obo/FBbi_00000249"
+                }
+            ],
             "labEquipment": "Zeiss LSM780, Zeiss 40×C-Apochromat 1.2NA"
         },
         {

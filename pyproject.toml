@@ -8,6 +8,7 @@ dependencies = [
     "elasticsearch>=8.0.0,<9.0.0",
     "fastapi>=0.127.1",
     "httpx>=0.28.1",
+    "ols-client>=0.2.1",
     "pydantic>=2.12.5",
     "pyld>=2.0.4",
     "rdflib>=7.5.0",
@@ -35,8 +36,8 @@ build-backend = "hatchling.build"
 packages = ["src/gide_search"]
 
 [project.scripts]
-gide-search = "gide_search.cli:main"
-gide-search-2 = "gide_search_v2.cli:main"
+gide-search-v1 = "gide_search.cli:main"
+gide-search = "gide_search_v2.cli:main"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
