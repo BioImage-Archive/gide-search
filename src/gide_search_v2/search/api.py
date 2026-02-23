@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from typing import Annotated
 
 from fastapi import FastAPI, Query
@@ -148,6 +149,32 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     )
 
 
+def expand_short_identifier(identifiers: list[str]) -> list[str]:
+    full_indentitifers = []
+    for identifier in identifiers:
+        if identifier.startswith("http"):
+            full_indentitifers.append(identifier)
+            continue
+
+        match_fbbi = re.match(r"^fbbi\w*?(\d+)$", identifier, re.IGNORECASE)
+        if match_fbbi:
+            full_indentitifers.append(
+                f"http://purl.obolibrary.org/obo/FBbi_{match_fbbi.group(1)}"
+            )
+            continue
+
+        match_ncbi = re.match(r"^ncbi\w*?(\d+)$", identifier, re.IGNORECASE)
+        if match_ncbi:
+            full_indentitifers.append(
+                f"http://purl.obolibrary.org/obo/NCBITaxon_{int(match_ncbi.group(1))}"
+            )
+            continue
+
+        full_indentitifers.append(identifier)
+
+    return full_indentitifers
+
+
 SEARCH_QUERY_DESCRIPTION = """
 Search query string.
 
@@ -163,10 +190,10 @@ def search(
         list[str] | None, Query(description="Filter by publisher (IDR, SSBD, BIA)")
     ] = None,
     organism: Annotated[
-        list[str] | None, Query(description="Filter by organism name")
+        list[str] | None, Query(description="Filter by organism id")
     ] = None,
     imaging_method: Annotated[
-        list[str] | None, Query(description="Filter by imaging method")
+        list[str] | None, Query(description="Filter by imaging method id")
     ] = None,
     license: Annotated[list[str] | None, Query(description="Filter by license")] = None,
     year_from: Annotated[
@@ -194,8 +221,10 @@ def search(
     es_response = indexer.faceted_search(
         query=q,
         publishers=publisher,
-        organisms=organism,
-        imaging_methods=imaging_method,
+        organisms=expand_short_identifier(organism) if organism else None,
+        imaging_methods=(
+            expand_short_identifier(imaging_method) if imaging_method else None
+        ),
         licenses=license,
         date_from=date_from,
         date_to=date_to,

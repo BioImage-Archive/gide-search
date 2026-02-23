@@ -463,10 +463,11 @@ def print_facet_list(
     if isinstance(buckets, list) and len(buckets) > 0:
         typer.echo(f"  {title}:")
         for bucket in buckets[:limit]:
-            additional_name = f" ({bucket['label']})" if bucket.get("label") else ""
-            typer.echo(
-                f"    {bucket.get('key_as_string') or bucket.get('key')}{additional_name}: {bucket.get(count_field)}"
-            )
+            if bucket[count_field] != 0:
+                additional_name = f" ({bucket['label']})" if bucket.get("label") else ""
+                typer.echo(
+                    f"    {bucket.get('key_as_string') or bucket.get('key')}{additional_name}: {bucket[count_field]}"
+                )
 
 
 @app.command(help="Run the api.")

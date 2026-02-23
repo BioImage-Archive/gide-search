@@ -357,11 +357,25 @@ class DatabaseEntryIndexer:
 
         # Organism filter - filter by pre-computed taxon_ids
         if organisms:
-            filter_clauses.append({"terms": {"taxon_ids": organisms}})
+            filter_clauses.append(
+                {
+                    "nested": {
+                        "path": "taxon_ids",
+                        "query": {"terms": {"taxon_ids.id": organisms}},
+                    }
+                }
+            )
 
         # Imaging method filter - filter by pre-computed imaging_method_ids
         if imaging_methods:
-            filter_clauses.append({"terms": {"imaging_method_ids": imaging_methods}})
+            filter_clauses.append(
+                {
+                    "nested": {
+                        "path": "imaging_method_ids",
+                        "query": {"terms": {"imaging_method_ids.id": imaging_methods}},
+                    }
+                }
+            )
 
         # Date range filter
         if date_from or date_to:
