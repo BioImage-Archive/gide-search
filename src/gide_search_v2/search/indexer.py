@@ -144,11 +144,12 @@ class DatabaseEntryIndexer:
         es_url: str = "http://localhost:9200",
         index_name: str = GIDE_DATASETS_INDEX,
         api_key: str | None = None,
+        verify_certs: bool = True,
     ):
         if api_key:
-            self.es = Elasticsearch(es_url, api_key=api_key)
+            self.es = Elasticsearch(es_url, api_key=api_key, verify_certs=verify_certs)
         else:
-            self.es = Elasticsearch(es_url)
+            self.es = Elasticsearch(es_url, verify_certs=verify_certs)
         self.index_name = index_name
 
     def ping(self) -> bool:

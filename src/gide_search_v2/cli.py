@@ -167,7 +167,7 @@ def index(
     ),
 ) -> None:
     """Index study data into ElasticSearch."""
-    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key, verify_certs=False)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)
@@ -250,7 +250,7 @@ def search(
         help="End year to filter `datePublished`",
     ),
 ) -> None:
-    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key, verify_certs=False)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)
