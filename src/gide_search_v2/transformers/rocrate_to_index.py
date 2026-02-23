@@ -1,6 +1,4 @@
-import json
 import logging
-from pathlib import Path
 
 from pydantic import ValidationError
 from pyld import jsonld
@@ -86,5 +84,3 @@ class ROCrateIndexTransformer(Transformer):
             raise e
 
         return dataset.model_dump(by_alias=False)
-
-        
