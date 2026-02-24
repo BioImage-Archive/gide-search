@@ -69,6 +69,16 @@ class Taxon(JsonLdNode):
 class DefinedTerm(JsonLdNode):
     name: str
 
+    @field_validator("id", mode="after")
+    @classmethod
+    def fix_common_iri_errors(cls, value: str) -> str:
+        # FBbi ids require that specific capitalization, which is easy to get incorrect.
+        if value.lower().startswith("http://purl.obolibrary.org/obo/fbbi_"):
+            digits = str(value).split("_")[1]
+            return f"http://purl.obolibrary.org/obo/FBbi_{digits}"
+        else:
+            return value
+
 
 class BioSample(JsonLdNode):
     name: str
