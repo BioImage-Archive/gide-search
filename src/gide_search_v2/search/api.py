@@ -1,5 +1,6 @@
 import logging
 import os
+import re
 from typing import Annotated
 
 from fastapi import FastAPI, Query
@@ -29,12 +30,16 @@ class FacetBucket(BaseModel):
     count: int
 
 
+class LabeledFacetBucket(FacetBucket):
+    label: str | None
+
+
 class Facets(BaseModel):
     """Facet aggregations for filtering."""
 
     publishers: list[FacetBucket]
-    organisms: list[FacetBucket]
-    imaging_methods: list[FacetBucket]
+    organisms: list[LabeledFacetBucket]
+    imaging_methods: list[LabeledFacetBucket]
     year_published: list[FacetBucket]
     license: list[FacetBucket]
 
@@ -53,13 +58,46 @@ class SearchResponse(BaseModel):
     facets: Facets | None = None
 
 
-def parse_aggregate(aggregations: dict, source_key: str) -> list[FacetBucket]:
-    return [
-        FacetBucket(
-            key=bucket.get("key_as_string", bucket["key"]), count=bucket["doc_count"]
+def parse_aggregate(
+    aggregations: dict, source_key: str, nested_source_key: str | None = None
+) -> list[FacetBucket]:
+    aggs = []
+    if nested_source_key:
+        buckets = (
+            aggregations.get(source_key, {})
+            .get(nested_source_key, {})
+            .get("buckets", [])
         )
-        for bucket in aggregations.get(source_key, {}).get("buckets", [])
-    ]
+    else:
+        buckets = aggregations.get(source_key, {}).get("buckets", [])
+
+    for bucket in buckets:
+        key_label = None
+
+        if bucket.get("name"):
+            first_name_hit = next(
+                iter(bucket.get("name", {}).get("hits", {}).get("hits", [])), None
+            )
+            if first_name_hit:
+                key_label = first_name_hit.get("_source", {}).get("name")
+
+        if nested_source_key:
+            aggs.append(
+                LabeledFacetBucket(
+                    key=bucket.get("key_as_string", bucket["key"]),
+                    count=bucket["doc_count"],
+                    label=key_label,
+                )
+            )
+
+        else:
+            aggs.append(
+                FacetBucket(
+                    key=bucket.get("key_as_string", bucket["key"]),
+                    count=bucket["doc_count"],
+                )
+            )
+    return aggs
 
 
 def parse_es_response(es_response: dict) -> SearchResponse:
@@ -84,8 +122,10 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     # Parse aggregations for facets
     aggregations = es_response.get("aggregations", {})
 
-    organisms = parse_aggregate(aggregations, "organisms")
-    imaging_methods = parse_aggregate(aggregations, "imaging_methods")
+    organisms = parse_aggregate(aggregations, "organisms", "taxon_ids")
+    imaging_methods = parse_aggregate(
+        aggregations, "imaging_methods", "imaging_method_ids"
+    )
     publishers = parse_aggregate(aggregations, "publishers")
     years = parse_aggregate(aggregations, "year_published")
     license = parse_aggregate(aggregations, "license")
@@ -109,6 +149,32 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     )
 
 
+def expand_short_identifier(identifiers: list[str]) -> list[str]:
+    full_indentitifers = []
+    for identifier in identifiers:
+        if identifier.startswith("http"):
+            full_indentitifers.append(identifier)
+            continue
+
+        match_fbbi = re.match(r"^fbbi\w*?(\d+)$", identifier, re.IGNORECASE)
+        if match_fbbi:
+            full_indentitifers.append(
+                f"http://purl.obolibrary.org/obo/FBbi_{match_fbbi.group(1)}"
+            )
+            continue
+
+        match_ncbi = re.match(r"^ncbi\w*?(\d+)$", identifier, re.IGNORECASE)
+        if match_ncbi:
+            full_indentitifers.append(
+                f"http://purl.obolibrary.org/obo/NCBITaxon_{int(match_ncbi.group(1))}"
+            )
+            continue
+
+        full_indentitifers.append(identifier)
+
+    return full_indentitifers
+
+
 SEARCH_QUERY_DESCRIPTION = """
 Search query string.
 
@@ -124,10 +190,10 @@ def search(
         list[str] | None, Query(description="Filter by publisher (IDR, SSBD, BIA)")
     ] = None,
     organism: Annotated[
-        list[str] | None, Query(description="Filter by organism name")
+        list[str] | None, Query(description="Filter by organism id")
     ] = None,
     imaging_method: Annotated[
-        list[str] | None, Query(description="Filter by imaging method")
+        list[str] | None, Query(description="Filter by imaging method id")
     ] = None,
     license: Annotated[list[str] | None, Query(description="Filter by license")] = None,
     year_from: Annotated[
@@ -155,8 +221,10 @@ def search(
     es_response = indexer.faceted_search(
         query=q,
         publishers=publisher,
-        organisms=organism,
-        imaging_methods=imaging_method,
+        organisms=expand_short_identifier(organism) if organism else None,
+        imaging_methods=(
+            expand_short_identifier(imaging_method) if imaging_method else None
+        ),
         licenses=license,
         date_from=date_from,
         date_to=date_to,

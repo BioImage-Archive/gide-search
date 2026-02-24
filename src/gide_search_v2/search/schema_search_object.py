@@ -54,9 +54,30 @@ class Taxon(JsonLdNode):
 
         return self
 
+    @field_validator("id", mode="after")
+    @classmethod
+    def strip_leading_zeroes(cls, value: str) -> str:
+        if value.startswith("http://purl.obolibrary.org/obo/NCBITaxon_0"):
+            digits = str(value).split("_")[1]
+            normalised_digits = int(digits)
+
+            return f"http://purl.obolibrary.org/obo/NCBITaxon_{normalised_digits}"
+        else:
+            return value
+
 
 class DefinedTerm(JsonLdNode):
     name: str
+
+    @field_validator("id", mode="after")
+    @classmethod
+    def fix_common_iri_errors(cls, value: str) -> str:
+        # FBbi ids require that specific capitalization, which is easy to get incorrect.
+        if value.lower().startswith("http://purl.obolibrary.org/obo/fbbi_"):
+            digits = str(value).split("_")[1]
+            return f"http://purl.obolibrary.org/obo/FBbi_{digits}"
+        else:
+            return value
 
 
 class BioSample(JsonLdNode):
@@ -148,8 +169,8 @@ class Dataset(JsonLdNode):
 
 
 class IndexableDataset(Dataset):
-    taxon_ids: list[str] = Field(default_factory=list)
-    imaging_method_ids: list[str] = Field(default_factory=list)
+    taxon_ids: list[Taxon] = Field(default_factory=list)
+    imaging_method_ids: list[DefinedTerm] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def poplate_additional_index_fields(self) -> Self:
@@ -158,9 +179,13 @@ class IndexableDataset(Dataset):
         """
         for biological_object in self.about:
             if isinstance(biological_object, Taxon):
-                self.taxon_ids.append(biological_object.id)
+                self.taxon_ids.append(biological_object)
 
         for measurment_object in self.measurementMethod:
-            if isinstance(measurment_object, DefinedTerm):
-                self.imaging_method_ids.append(measurment_object.id)
+            if isinstance(
+                measurment_object, DefinedTerm
+            ) and measurment_object.id.startswith(
+                "http://purl.obolibrary.org/obo/FBbi_"
+            ):
+                self.imaging_method_ids.append(measurment_object)
         return self

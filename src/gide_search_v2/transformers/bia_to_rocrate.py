@@ -1,3 +1,5 @@
+import re
+
 from pydantic import AnyUrl, ValidationError
 from pyld import jsonld
 
@@ -92,30 +94,8 @@ class BIAROCrateTransformer(ROCrateTransformer):
         taxons_ids = set()
         for dataset in bia_search_hit["dataset"]:
             for bia_bio_sample in dataset["biological_entity"]:
-                taxons = []
-                for bia_taxon in bia_bio_sample["organism_classification"]:
-                    if not bia_taxon["ncbi_id"]:
-                        search_term = (
-                            bia_taxon["scientific_name"] or bia_taxon["common_name"]
-                        )
-                        possible_terms = (
-                            self.ontology_term_finder.find_iri_for_class_in_ontology(
-                                "ncbitaxon", search_term
-                            )
-                        )
-                        if len(possible_terms) > 0:
-                            bia_taxon["ncbi_id"] = possible_terms[0][0]
-
-                    if bia_taxon["ncbi_id"]:
-                        taxons.append(
-                            {
-                                "@type": ["Taxon"],
-                                "vernacularName": bia_taxon["common_name"],
-                                "scientificName": bia_taxon["scientific_name"],
-                                "@id": bia_taxon["ncbi_id"],
-                            }
-                        )
-                        taxons_ids.add(str(bia_taxon["ncbi_id"]))
+                taxons = self._get_taxons_from_ontology(bia_bio_sample)
+                [taxons_ids.add(taxon["@id"]) for taxon in taxons]
 
                 bio_samples.append(
                     {
@@ -131,43 +111,67 @@ class BIAROCrateTransformer(ROCrateTransformer):
 
         return bio_samples
 
+    def _get_taxons_from_ontology(self, bia_bio_sample):
+        taxons = []
+        for bia_taxon in bia_bio_sample["organism_classification"]:
+            if bia_taxon["ncbi_id"]:
+                # Fetch labels from ontology to make sure we use canonical values.
+                ncbi_id: str = bia_taxon["ncbi_id"]
+                if not ncbi_id.startswith("http"):
+                    match = re.search(r"(\d+)$", ncbi_id)
+                    if match:
+                        ncbi_id = f"http://purl.obolibrary.org/obo/NCBITaxon_{int(match.group(1))}"
+                    else:
+                        continue
+
+                term_with_labels = self.ontology_term_finder.fetch_labels_for_term(
+                    "ncbitaxon", ncbi_id
+                )
+                if term_with_labels:
+                    taxons.append(
+                        {
+                            "@type": ["Taxon"],
+                            "vernacularName": next(
+                                iter(term_with_labels.additional_label)
+                            ),
+                            "scientificName": term_with_labels.label[0],
+                            "@id": term_with_labels.iri,
+                        }
+                    )
+
+            else:
+                search_term = bia_taxon["scientific_name"] or bia_taxon["common_name"]
+                possible_terms = (
+                    self.ontology_term_finder.find_iri_for_class_in_ontology(
+                        "ncbitaxon", search_term
+                    )
+                )
+                if len(possible_terms) > 0:
+                    term_with_labels = possible_terms[0]
+                    taxons.append(
+                        {
+                            "@type": ["Taxon"],
+                            "vernacularName": next(
+                                iter(term_with_labels.additional_label), None
+                            ),
+                            "scientificName": term_with_labels.label[0],
+                            "@id": term_with_labels.iri,
+                        }
+                    )
+        return taxons
+
     def _get_imaging_protocols(self, bia_search_hit: dict):
         imaging_protocol = []
         imaging_method_ids = set()
         for dataset in bia_search_hit["dataset"]:
             for bia_image_acquisition_protocol in dataset["acquisition_process"]:
-                imaging_methods = []
-
-                if len(bia_image_acquisition_protocol["fbbi_id"]) == 0:
-                    for imaging_method_name in bia_image_acquisition_protocol[
-                        "imaging_method_name"
-                    ]:
-                        terms = (
-                            self.ontology_term_finder.find_iri_for_class_in_ontology(
-                                "fbbi",
-                                imaging_method_name,
-                                "http://purl.obolibrary.org/obo/FBbi_00000265",
-                            )
-                        )
-                        if len(terms) > 0:
-                            imaging_methods.append(
-                                {
-                                    "@id": terms[0][0],
-                                    "@type": ["DefinedTerm"],
-                                    "name": terms[0][1][0],
-                                }
-                            )
-                            imaging_method_ids.add(terms[0][0])
-                else:
-                    for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
-                        imaging_methods.append(
-                            {
-                                "@id": fbbi_id,
-                                "@type": ["DefinedTerm"],
-                                "name": self._get_fbbi_label_from_ontology(fbbi_id),
-                            }
-                        )
-                        imaging_method_ids.add(fbbi_id)
+                imaging_methods = self._get_imaging_method_from_ontology(
+                    bia_image_acquisition_protocol
+                )
+                [
+                    imaging_method_ids.add(imaging_method["@id"])
+                    for imaging_method in imaging_methods
+                ]
 
                 imaging_protocol.append(
                     {
@@ -185,6 +189,41 @@ class BIAROCrateTransformer(ROCrateTransformer):
                 )
         imaging_protocol += [{"@id": imaging_id} for imaging_id in imaging_method_ids]
         return imaging_protocol
+
+    def _get_imaging_method_from_ontology(self, bia_image_acquisition_protocol):
+        imaging_methods = []
+
+        if len(bia_image_acquisition_protocol["fbbi_id"]) == 0:
+            for imaging_method_name in bia_image_acquisition_protocol[
+                "imaging_method_name"
+            ]:
+                terms = self.ontology_term_finder.find_iri_for_class_in_ontology(
+                    "fbbi",
+                    imaging_method_name,
+                    "http://purl.obolibrary.org/obo/FBbi_00000265",
+                )
+                if len(terms) > 0:
+                    imaging_methods.append(
+                        {
+                            "@id": terms[0].iri,
+                            "@type": ["DefinedTerm"],
+                            "name": terms[0].label[0],
+                        }
+                    )
+        else:
+            for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
+                term_with_labels = self.ontology_term_finder.fetch_labels_for_term(
+                    "fbbi", fbbi_id
+                )
+                if term_with_labels:
+                    imaging_methods.append(
+                        {
+                            "@id": fbbi_id,
+                            "@type": ["DefinedTerm"],
+                            "name": next(iter(term_with_labels.label)),
+                        }
+                    )
+        return imaging_methods
 
     def _get_size(self, bia_search_hit: dict):
         file_count = 0

@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from gide_search_v2.search.indexer import DatabaseEntryIndexer
+from gide_search_v2.search.schema_search_object import IndexableDataset
 
 from .transformers import BIAROCrateTransformer, ROCrateIndexTransformer
 from .utils.ontology_term_finder import OntologyTermFinder
@@ -23,6 +24,7 @@ app = typer.Typer(
 )
 data = typer.Typer(
     name="data",
+    help="Commands related to ro-crate index creation, and data transformation.",
 )
 app.add_typer(data)
 
@@ -30,6 +32,8 @@ app.add_typer(data)
 BASE_OUTPUT_DIRECTORY = Path(__file__).parents[2] / "output"
 DEFAULT_INDEX_FILE = "index.json"
 DEFAULT_INDEX_DIRECTORY = BASE_OUTPUT_DIRECTORY / "index"
+DEFAULT_ONTOLOGY_TERM_DIRECTORY = BASE_OUTPUT_DIRECTORY / "ontology_term_list"
+DEFAULT_ONTOLOGY_TERM_FILE = "ontology_term_list.json"
 
 
 def write_rocrate(
@@ -418,9 +422,19 @@ def fancy_format_hit(hit: dict, source_field: str, score_field: str):
 
 def fancy_format_aggregations(facet_aggregataions: dict, count_field: str):
     typer.echo("Facets:")
-    print_facet_list(facet_aggregataions, "organisms", "Organisms", count_field)
     print_facet_list(
-        facet_aggregataions, "imaging_methods", "Imaging methods", count_field
+        facet_aggregataions,
+        "organisms",
+        "Organisms",
+        count_field,
+        nested_field_name="taxon_ids",
+    )
+    print_facet_list(
+        facet_aggregataions,
+        "imaging_methods",
+        "Imaging methods",
+        count_field,
+        nested_field_name="imaging_method_ids",
     )
     print_facet_list(facet_aggregataions, "publishers", "Publisher", count_field)
     print_facet_list(
@@ -430,17 +444,29 @@ def fancy_format_aggregations(facet_aggregataions: dict, count_field: str):
 
 
 def print_facet_list(
-    facet_aggs: dict, field_name: str, title: str, count_field: str, limit: int = 20
+    facet_aggs: dict,
+    field_name: str,
+    title: str,
+    count_field: str,
+    limit: int = 20,
+    nested_field_name: str | None = None,
 ) -> None:
-    facets = facet_aggs.get(field_name, [])
-    if isinstance(facets, dict) and "buckets" in facets:
-        facets = facets["buckets"]
-    if len(facets) > 0:
+
+    buckets = facet_aggs.get(field_name)
+
+    if isinstance(buckets, dict):
+        if nested_field_name:
+            buckets = buckets.get(nested_field_name, {}).get("buckets")
+        else:
+            buckets = buckets.get("buckets")
+
+    if isinstance(buckets, list) and len(buckets) > 0:
         typer.echo(f"  {title}:")
-        for facet in facets[:limit]:
-            if facet.get(count_field) > 0:
+        for bucket in buckets[:limit]:
+            if bucket[count_field] != 0:
+                additional_name = f" ({bucket['label']})" if bucket.get("label") else ""
                 typer.echo(
-                    f"    {facet.get('key_as_string') or facet.get('key')}: {facet.get(count_field)}"
+                    f"    {bucket.get('key_as_string') or bucket.get('key')}{additional_name}: {bucket[count_field]}"
                 )
 
 
@@ -473,3 +499,52 @@ def serve(
         port=port,
         reload=reload,
     )
+
+
+@data.command(
+    help="Create a lookup table for ontology terms for use in the search api."
+)
+def create_ontology_map(
+    index_document: Path = typer.Argument(
+        DEFAULT_INDEX_DIRECTORY / DEFAULT_INDEX_FILE, help="Search query"
+    ),
+    output_path: Path = typer.Option(
+        DEFAULT_ONTOLOGY_TERM_DIRECTORY,
+        "--output-path",
+        "-o",
+        help="Path to write a json file to later index.",
+    ),
+):
+
+    ontology_term_finder = OntologyTermFinder()
+
+    with open(index_document) as f:
+        index_objects = json.loads(f.read())
+
+    if isinstance(index_objects, dict):
+        index_objects = [index_objects]
+
+    ontology_terms = {}
+
+    for index_object in index_objects:
+        index_pydantic_obj = IndexableDataset.model_validate(index_object)
+
+        for ncbi_term in index_pydantic_obj.taxon_ids:
+            if ncbi_term not in ontology_terms:
+                ontology_term = ontology_term_finder.fetch_labels_for_term(
+                    "ncbitaxon", ncbi_term
+                )
+                if ontology_term:
+                    ontology_terms[ontology_term["iri"]] = ontology_term
+
+        for fbbi_term in index_pydantic_obj.imaging_method_ids:
+            if fbbi_term not in ontology_terms:
+                ontology_term = ontology_term_finder.fetch_labels_for_term(
+                    "fbbi", fbbi_term
+                )
+                if ontology_term:
+                    ontology_terms[ontology_term["iri"]] = ontology_term
+
+    output_path.mkdir(parents=True, exist_ok=True)
+    with open(output_path / DEFAULT_ONTOLOGY_TERM_FILE, "w") as f:
+        json.dump(list(ontology_terms.values()), f, indent=2, ensure_ascii=False)

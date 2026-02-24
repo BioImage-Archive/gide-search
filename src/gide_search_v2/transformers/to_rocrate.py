@@ -10,11 +10,9 @@ from gide_search_v2.transformers.base_transformer import Transformer
 
 class ROCrateTransformer(Transformer):
     generated_ids: set[str]
-    fbbi_label_cache: dict
 
     def __init__(self):
         self.generated_ids = set()
-        self.fbbi_label_cache = {}
         super().__init__()
 
     def _get_ro_crate_context(self) -> str | dict | list[dict | str]:
@@ -94,28 +92,3 @@ class ROCrateTransformer(Transformer):
             relative_ref = self._generate_ref_id(relative_ref, force_unique=True)
         self.generated_ids.add(relative_ref)
         return relative_ref
-
-    def _get_fbbi_label_from_ontology(self, fbbi_term: str) -> str | None:
-        """Fetch and cache the label for an FBBI ontology term from the OWL document."""
-        # Check cache first
-        if fbbi_term in self.fbbi_label_cache:
-            return self.fbbi_label_cache[fbbi_term]
-
-        graph = Graph()
-        try:
-            response = httpx.get(fbbi_term, timeout=10, follow_redirects=True)
-            response.raise_for_status()
-            graph.parse(data=response.text, format="xml")
-        except Exception as e:
-            self.fbbi_label_cache[fbbi_term] = None
-            return None
-
-        term_uri = URIRef(fbbi_term)
-        labels = list(graph.objects(term_uri, RDFS.label))
-        if labels:
-            label = str(labels[0])
-            self.fbbi_label_cache[fbbi_term] = label
-            return label
-        else:
-            self.fbbi_label_cache[fbbi_term] = None
-            return None

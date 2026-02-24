@@ -6,7 +6,6 @@ from pathlib import Path
 from elasticsearch import Elasticsearch
 from elasticsearch.helpers import bulk
 
-
 # Index name
 GIDE_DATASETS_INDEX = "gide-datasets"
 
@@ -116,8 +115,29 @@ INDEX_MAPPING = {
                 },
             },
             # Pre-computed facet IDs for faster filtering and aggregation
-            "taxon_ids": {"type": "keyword"},
-            "imaging_method_ids": {"type": "keyword"},
+            "taxon_ids": {
+                "type": "nested",
+                "properties": {
+                    "id": {"type": "keyword"},
+                    "scientificName": {
+                        "type": "keyword",
+                        "index": False,
+                        "doc_values": False,
+                    },
+                    "vernacularName": {
+                        "type": "keyword",
+                        "index": False,
+                        "doc_values": False,
+                    },
+                },
+            },
+            "imaging_method_ids": {
+                "type": "nested",
+                "properties": {
+                    "id": {"type": "keyword"},
+                    "name": {"type": "keyword", "index": False, "doc_values": False},
+                },
+            },
             # No need to index the urls for search, but used for field exist queries
             "thumbnailUrl": {"type": "keyword", "index": False, "doc_values": True},
         },
@@ -337,11 +357,25 @@ class DatabaseEntryIndexer:
 
         # Organism filter - filter by pre-computed taxon_ids
         if organisms:
-            filter_clauses.append({"terms": {"taxon_ids": organisms}})
+            filter_clauses.append(
+                {
+                    "nested": {
+                        "path": "taxon_ids",
+                        "query": {"terms": {"taxon_ids.id": organisms}},
+                    }
+                }
+            )
 
         # Imaging method filter - filter by pre-computed imaging_method_ids
         if imaging_methods:
-            filter_clauses.append({"terms": {"imaging_method_ids": imaging_methods}})
+            filter_clauses.append(
+                {
+                    "nested": {
+                        "path": "imaging_method_ids",
+                        "query": {"terms": {"imaging_method_ids.id": imaging_methods}},
+                    }
+                }
+            )
 
         # Date range filter
         if date_from or date_to:
@@ -378,15 +412,35 @@ class DatabaseEntryIndexer:
                     }
                 },
                 "organisms": {
-                    "terms": {
-                        "field": "taxon_ids",
-                        "size": 50,
+                    "nested": {"path": "taxon_ids"},
+                    "aggs": {
+                        "taxon_ids": {
+                            "terms": {"field": "taxon_ids.id", "size": 50},
+                            "aggs": {
+                                "name": {
+                                    "top_hits": {
+                                        "size": 1,
+                                        "_source": ["taxon_ids.name"],
+                                    }
+                                }
+                            },
+                        }
                     },
                 },
                 "imaging_methods": {
-                    "terms": {
-                        "field": "imaging_method_ids",
-                        "size": 50,
+                    "nested": {"path": "imaging_method_ids"},
+                    "aggs": {
+                        "imaging_method_ids": {
+                            "terms": {"field": "imaging_method_ids.id", "size": 50},
+                            "aggs": {
+                                "name": {
+                                    "top_hits": {
+                                        "size": 1,
+                                        "_source": ["imaging_method_ids.name"],
+                                    }
+                                }
+                            },
+                        }
                     },
                 },
                 "publishers": {
