@@ -31,12 +31,13 @@ class Publisher(Organization):
     @classmethod
     def standarise_id_url(cls, value: str):
         try:
-            parse.urlsplit(value)
+            x = parse.urlsplit(value)
         except Exception as e:
             raise e
 
         if not value.endswith("/"):
             return f"{value}/"
+        return value
 
 
 class Person(JsonLdNode):
