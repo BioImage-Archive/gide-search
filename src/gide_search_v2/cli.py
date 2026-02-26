@@ -169,9 +169,14 @@ def index(
         "--recreate",
         help="Delete and recreate the index before indexing",
     ),
+    ca_certs: str = typer.Option(
+        None,
+        "--ca_cert",
+        help="Path to the CA certs for ES",
+    ),
 ) -> None:
     """Index study data into ElasticSearch."""
-    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key, ca_certs=ca_certs)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)
@@ -253,8 +258,13 @@ def search(
         "--require-thumbnail",
         help="End year to filter `datePublished`",
     ),
+    ca_certs: str = typer.Option(
+        None,
+        "--ca_cert",
+        help="Path to the CA certs for ES",
+    ),
 ) -> None:
-    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key)
+    indexer = DatabaseEntryIndexer(es_url=es_url, api_key=api_key, ca_certs=ca_certs)
 
     if not indexer.ping():
         typer.echo("Error: Cannot connect to ElasticSearch", err=True)

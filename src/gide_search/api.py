@@ -22,7 +22,7 @@ app = FastAPI(
 # Initialize indexer from environment or defaults
 ES_URL = os.environ.get("ES_URL", "http://localhost:9200")
 ES_API_KEY = os.environ.get("ES_API_KEY")
-indexer = DatasetIndexer(es_url=ES_URL, api_key=ES_API_KEY)
+indexer = DatasetIndexer(es_url=ES_URL, api_key=ES_API_KEY, verify_certs=False)
 
 
 class FacetBucket(BaseModel):

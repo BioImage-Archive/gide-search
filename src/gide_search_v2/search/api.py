@@ -4,6 +4,7 @@ import re
 from typing import Annotated
 
 from fastapi import FastAPI, Query
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ValidationError
 
 from .indexer import DatabaseEntryIndexer
@@ -20,7 +21,8 @@ app = FastAPI(
 # Initialize indexer from environment or defaults
 ES_URL = os.environ.get("ES_URL", "http://localhost:9200")
 ES_API_KEY = os.environ.get("ES_API_KEY")
-indexer = DatabaseEntryIndexer(es_url=ES_URL, api_key=ES_API_KEY)
+ES_CA_CERT = os.environ.get("ES_CA_CERT")
+indexer = DatabaseEntryIndexer(es_url=ES_URL, api_key=ES_API_KEY, ca_certs=ES_CA_CERT)
 
 
 class FacetBucket(BaseModel):
@@ -247,7 +249,12 @@ def get_entry(entry_id: str) -> dict:
 def health_check() -> dict:
     """Check API and ElasticSearch health."""
     es_ok = indexer.ping()
-    return {
+
+    response = {
         "status": "healthy" if es_ok else "degraded",
         "elasticsearch": "connected" if es_ok else "disconnected",
     }
+
+    # ! k8s readiness probe only checks status code
+    status_code = 200 if es_ok else 500
+    return JSONResponse(content=response, status_code=status_code)
