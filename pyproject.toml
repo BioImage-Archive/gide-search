@@ -5,6 +5,7 @@ description = "Unified search system for biological imaging databases (IDR, SSBD
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "bidict>=0.23.1",
     "elasticsearch>=8.0.0,<9.0.0",
     "fastapi>=0.127.1",
     "httpx>=0.28.1",

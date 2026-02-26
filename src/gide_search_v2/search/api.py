@@ -1,10 +1,13 @@
 import logging
 import os
 import re
+from collections.abc import Callable
 from typing import Annotated
 
+import bidict
 from fastapi import FastAPI, Query
 from pydantic import BaseModel, ValidationError
+import typer
 
 from .indexer import DatabaseEntryIndexer
 from .schema_search_object import Dataset
@@ -37,7 +40,7 @@ class LabeledFacetBucket(FacetBucket):
 class Facets(BaseModel):
     """Facet aggregations for filtering."""
 
-    publishers: list[FacetBucket]
+    publishers: list[LabeledFacetBucket]
     organisms: list[LabeledFacetBucket]
     imaging_methods: list[LabeledFacetBucket]
     year_published: list[FacetBucket]
@@ -58,9 +61,28 @@ class SearchResponse(BaseModel):
     facets: Facets | None = None
 
 
+def map_publisher(input: str, to_url: bool) -> str | None:
+    publisher_lookup = bidict.bidict(
+        {
+            "BioImage-Archive": "https://www.ebi.ac.uk/bioimage-archive/",
+            "SSBD:repository": "https://ssbd.riken.jp/repository/",
+            "SSBD:database": "https://ssbd.riken.jp/database/",
+            "IDR": "https://idr.openmicroscopy.org/",
+        }
+    )
+
+    if to_url:
+        return publisher_lookup.get(input)
+    else:
+        return publisher_lookup.inverse.get(input)
+
+
 def parse_aggregate(
-    aggregations: dict, source_key: str, nested_source_key: str | None = None
-) -> list[FacetBucket]:
+    aggregations: dict,
+    source_key: str,
+    nested_source_key: str | None = None,
+    label_mapping_function: Callable[[str], str | None] | None = None,
+) -> list[FacetBucket] | list[LabeledFacetBucket]:
     aggs = []
     if nested_source_key:
         buckets = (
@@ -81,7 +103,10 @@ def parse_aggregate(
             if first_name_hit:
                 key_label = first_name_hit.get("_source", {}).get("name")
 
-        if nested_source_key:
+        if label_mapping_function:
+            key_label = label_mapping_function(bucket["key"])
+
+        if key_label:
             aggs.append(
                 LabeledFacetBucket(
                     key=bucket.get("key_as_string", bucket["key"]),
@@ -126,7 +151,11 @@ def parse_es_response(es_response: dict) -> SearchResponse:
     imaging_methods = parse_aggregate(
         aggregations, "imaging_methods", "imaging_method_ids"
     )
-    publishers = parse_aggregate(aggregations, "publishers")
+    publishers = parse_aggregate(
+        aggregations,
+        "publishers",
+        label_mapping_function=lambda agg_key: map_publisher(agg_key, False),
+    )
     years = parse_aggregate(aggregations, "year_published")
     license = parse_aggregate(aggregations, "license")
 
@@ -218,9 +247,13 @@ def search(
     date_from = f"{year_from}-01-01" if year_from else None
     date_to = f"{year_to}-12-31" if year_to else None
 
+    publisher_urls = None
+    if publisher:
+        publisher_urls = [map_publisher(p, to_url=True) or p for p in publisher]
+
     es_response = indexer.faceted_search(
         query=q,
-        publishers=publisher,
+        publishers=publisher_urls,
         organisms=expand_short_identifier(organism) if organism else None,
         imaging_methods=(
             expand_short_identifier(imaging_method) if imaging_method else None

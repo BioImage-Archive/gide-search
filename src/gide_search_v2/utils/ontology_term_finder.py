@@ -82,6 +82,8 @@ class OntologyTermFinder:
         iris_and_labels: list[TermWithLabels] = []
         for ontology_term in api_response["elements"]:
             if required_superclass:
+                if not ontology_term["hasDirectParents"]:
+                    continue
                 for ancestor in ontology_term["hierarchicalAncestor"]:
                     if ancestor["iri"] == required_superclass:
                         iris_and_labels.append(
