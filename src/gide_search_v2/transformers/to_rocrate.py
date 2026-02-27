@@ -24,6 +24,7 @@ class ROCrateTransformer(Transformer):
                 "dwc": "http://rs.tdwg.org/dwc/terms/",
                 "dwciri": "http://rs.tdwg.org/dwc/iri/",
                 "bao": "http://www.bioassayontology.org/bao#",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
                 "vernacularName": {"@id": "dwc:vernacularName"},
                 "scientificName": {"@id": "dwc:scientificName"},
                 "hasCellLine": {"@id": "bao:BAO_0002004"},
@@ -32,6 +33,10 @@ class ROCrateTransformer(Transformer):
                 "BioSample": {"@id": "http://schema.org/BioSample"},
                 "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
                 "labEquipment": {"@id": "http://schema.org/labEquipment"},
+                "datePublished": {
+                    "@id": "http://schema.org/datePublished",
+                    "@type": "xsd:date",
+                },
             },
         ]
 

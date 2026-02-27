@@ -19,8 +19,13 @@ class ROCrateIndexTransformer(Transformer):
                 "dwc": "http://rs.tdwg.org/dwc/terms/",
                 "bao": "http://www.bioassayontology.org/bao#",
                 "dwciri": "http://rs.tdwg.org/dwc/iri/",
+                "xsd": "http://www.w3.org/2001/XMLSchema#",
                 "vernacularName": {"@id": "dwc:vernacularName"},
                 "scientificName": {"@id": "dwc:scientificName"},
+                "datePublished": {
+                    "@id": "http://schema.org/datePublished",
+                    "@type": "xsd:date",
+                },
                 "BioSample": {"@id": "http://schema.org/BioSample"},
                 "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
                 "labEquipment": {"@id": "http://schema.org/labEquipment"},
