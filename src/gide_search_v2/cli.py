@@ -217,7 +217,7 @@ def index(
     ),
     ca_certs: str = typer.Option(
         None,
-        "--ca_cert",
+        "--ca-certs",
         help="Path to the CA certs for ES",
     ),
 ) -> None:
@@ -306,7 +306,7 @@ def search(
     ),
     ca_certs: str = typer.Option(
         None,
-        "--ca_cert",
+        "--ca-certs",
         help="Path to the CA certs for ES",
     ),
 ) -> None:
