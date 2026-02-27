@@ -115,28 +115,74 @@ def generate_bia_rocrate(
         "-o",
         help="Path to write a json file to later index.",
     ),
+    start_page: int = typer.Option(
+        1,
+        "--start_page",
+        "-s",
+        help="Starting page of results to process.",
+    ),
+    end_page: int | None = typer.Option(
+        None,
+        "--end_page",
+        "-e",
+        help="Process pages up to this page.",
+    ),
+    require_indexable: bool = typer.Option(
+        False,
+        "--require_indexable",
+        "-i",
+        help="Check that the resulting ro-crate can be converted to an index before writing.",
+    ),
 ):
-    bia_api_url = "https://alpha.bioimagearchive.org/search/search/fts"
+    bia_api_url = "https://alpha.bioimagearchive.org/search/v1/search/fts"
 
     query = ""
     page_size = 50
-    params = {
-        "query": query,
-        "pagination.page_size": page_size,
-    }
 
-    response = httpx.get(bia_api_url, params=params, timeout=30.0)
-    response.raise_for_status()
-
-    data = response.json().get("hits", {}).get("hits", [])
     transformer = BIAROCrateTransformer(OntologyTermFinder())
-    for hit in tqdm(data, desc="Generating BIA RO-Crates"):
-        source = hit["_source"]
-        if not source["dataset"]:
-            continue
-        detached_metadata = transformer.transform(source)
 
-        write_rocrate(detached_metadata, output_path, source["accession_id"])
+    page = start_page
+    total_processed = 0
+
+    if require_indexable:
+        index_transformer = ROCrateIndexTransformer()
+
+    while True:
+        params = {
+            "query": query,
+            "pagination.page_size": page_size,
+            "pagination.page": page,
+        }
+
+        response = httpx.get(bia_api_url, params=params, timeout=30.0)
+        response.raise_for_status()
+
+        data = response.json().get("hits", {}).get("hits", [])
+
+        if not data:
+            break
+
+        for hit in tqdm(data, desc=f"Generating BIA RO-Crates for page: {page}"):
+            source = hit["_source"]
+            if not source["dataset"]:
+                continue
+            detached_metadata = transformer.transform(source)
+
+            if require_indexable:
+                try:
+                    index_transformer.transform(detached_metadata)
+                except ValidationError as e:
+                    logger.error(e)
+                    continue
+
+            write_rocrate(detached_metadata, output_path, source["accession_id"])
+            total_processed += 1
+
+        page += 1
+        if page == end_page:
+            break
+
+    typer.echo(f"Processed {total_processed} datasets from BIA API")
 
 
 def main() -> None:
