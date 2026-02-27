@@ -144,6 +144,7 @@ def generate_bia_rocrate(
     page = start_page
     total_processed = 0
 
+    index_transformer = None
     if require_indexable:
         index_transformer = ROCrateIndexTransformer()
 
@@ -168,7 +169,7 @@ def generate_bia_rocrate(
                 continue
             detached_metadata = transformer.transform(source)
 
-            if require_indexable:
+            if require_indexable and index_transformer:
                 try:
                     index_transformer.transform(detached_metadata)
                 except ValidationError as e:
