@@ -56,22 +56,23 @@ class BIAROCrateTransformer(ROCrateTransformer):
     def _get_funder(self, bia_grants: list[dict]):
         funders = []
         for bia_grant in bia_grants:
-            try:
-                grant_id_url = str(AnyUrl(bia_grant["id"]))
-            except ValidationError:
-                grant_id_url = self._generate_ref_id(bia_grant["id"])
+            if bia_grant.get("id") and len(bia_grant.get("funder", ())) > 1:
+                try:
+                    grant_id_url = str(AnyUrl(bia_grant["id"]))
+                except ValidationError:
+                    grant_id_url = self._generate_ref_id(bia_grant["id"])
 
-            # Use funder name:
+                # Use funder name:
 
-            funders.append(
-                {
-                    "@id": grant_id_url,
-                    "@type": ["Grant"],
-                    "name": bia_grant.get("funder", [{}])[0].get("display_name"),
-                    # TODO: use name from grant funder?
-                    "identifier": bia_grant["id"],
-                }
-            )
+                funders.append(
+                    {
+                        "@id": grant_id_url,
+                        "@type": ["Grant"],
+                        "name": bia_grant.get("funder", [{}])[0].get("display_name"),
+                        # TODO: use name from grant funder?
+                        "identifier": bia_grant["id"],
+                    }
+                )
         return funders
 
     def _get_citation(self, bia_publications: list[dict]):
@@ -131,8 +132,10 @@ class BIAROCrateTransformer(ROCrateTransformer):
                     taxons.append(
                         {
                             "@type": ["Taxon"],
-                            "vernacularName": next(
-                                iter(term_with_labels.additional_label)
+                            "vernacularName": (
+                                term_with_labels.additional_label[0]
+                                if term_with_labels.additional_label
+                                else None
                             ),
                             "scientificName": term_with_labels.label[0],
                             "@id": term_with_labels.iri,
@@ -197,6 +200,8 @@ class BIAROCrateTransformer(ROCrateTransformer):
             for imaging_method_name in bia_image_acquisition_protocol[
                 "imaging_method_name"
             ]:
+                if len(imaging_method_name) > 120:
+                    continue
                 terms = self.ontology_term_finder.find_iri_for_class_in_ontology(
                     "fbbi",
                     imaging_method_name,
@@ -264,22 +269,28 @@ class BIAROCrateTransformer(ROCrateTransformer):
 
     def _get_authors(self, bia_authors: list[dict]):
         authors = []
+        author_ids = set()
         for bia_author in bia_authors:
-            authors.append(
-                {
-                    "@id": (
-                        self._standardise_orcid(bia_author["orcid"])
-                        if bia_author["orcid"]
-                        else self._generate_ref_id(
-                            bia_author["display_name"], force_unique=True
-                        )
-                    ),
-                    "@type": ["Person"],
-                    "name": bia_author["display_name"],
-                    "email": bia_author.get("contact_email"),
-                    "affiliation": self._get_affiliation(bia_author["affiliation"]),
-                }
-            )
+            if (
+                bia_author.get("orcid")
+                and (orcid := self._standardise_orcid(bia_author["orcid"]))
+                not in author_ids
+            ):
+                author_id = orcid
+            else:
+                author_id = self._generate_ref_id(
+                    bia_author["display_name"], force_unique=True
+                )
+
+            author = {
+                "@id": author_id,
+                "@type": ["Person"],
+                "name": bia_author["display_name"],
+                "email": bia_author.get("contact_email"),
+                "affiliation": self._get_affiliation(bia_author["affiliation"]),
+            }
+            authors.append(author)
+            author_ids.add(author_id)
         return authors
 
     @staticmethod

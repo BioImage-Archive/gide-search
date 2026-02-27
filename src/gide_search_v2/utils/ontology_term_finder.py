@@ -62,6 +62,8 @@ class OntologyTermFinder:
         if ontology not in self.avaliable_ontology_ids:
             raise KeyError(f"{ontology} is not in ols")
 
+        term_iri = term_iri.removeprefix("obo:")
+
         try:
             response = self.ebi_client.get_term(ontology, term_iri)
         except HTTPError as e:
