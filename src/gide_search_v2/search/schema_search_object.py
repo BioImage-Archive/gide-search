@@ -1,5 +1,6 @@
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing_extensions import Self
+from urllib import parse
 
 
 class JsonLdNode(BaseModel):
@@ -22,6 +23,21 @@ class Organization(JsonLdNode):
 
     url: str | None = None
     address: str | None = None
+
+
+class Publisher(Organization):
+
+    @field_validator("id", mode="after")
+    @classmethod
+    def standarise_id_url(cls, value: str):
+        try:
+            x = parse.urlsplit(value)
+        except Exception as e:
+            raise e
+
+        if not value.endswith("/"):
+            return f"{value}/"
+        return value
 
 
 class Person(JsonLdNode):
@@ -102,7 +118,7 @@ class Dataset(JsonLdNode):
     description: str
     datePublished: str
     license: str
-    publisher: Organization
+    publisher: Publisher
     about: list[BioSample | DefinedTerm | Taxon] = Field()
     measurementMethod: list[LabProtocol | DefinedTerm] = Field()
 

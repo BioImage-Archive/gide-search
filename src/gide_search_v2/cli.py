@@ -426,7 +426,7 @@ def search_api(
     if licenses:
         params["license"] = licenses
     if publishers:
-        params["publishers"] = licenses
+        params["publisher"] = publishers
     if require_thumbnail:
         params["require_thumbnail"] = True
 
