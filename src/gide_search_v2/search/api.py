@@ -7,7 +7,6 @@ from typing import Annotated
 import bidict
 from fastapi import FastAPI, Query
 from pydantic import BaseModel, ValidationError
-import typer
 
 from .indexer import DatabaseEntryIndexer
 from .schema_search_object import Dataset
@@ -40,9 +39,9 @@ class LabeledFacetBucket(FacetBucket):
 class Facets(BaseModel):
     """Facet aggregations for filtering."""
 
-    publishers: list[LabeledFacetBucket]
-    organisms: list[LabeledFacetBucket]
-    imaging_methods: list[LabeledFacetBucket]
+    publisher: list[FacetBucket]
+    organism: list[LabeledFacetBucket]
+    imaging_method: list[LabeledFacetBucket]
     year_published: list[FacetBucket]
     license: list[FacetBucket]
 
@@ -161,9 +160,9 @@ def parse_es_response(es_response: dict) -> SearchResponse:
 
     facets = (
         Facets(
-            publishers=publishers,
-            organisms=organisms,
-            imaging_methods=imaging_methods,
+            publisher=publishers,
+            organism=organisms,
+            imaging_method=imaging_methods,
             year_published=years,
             license=license,
         )
