@@ -3,6 +3,7 @@ import os
 import re
 from collections.abc import Callable
 from typing import Annotated
+from urllib.parse import urlparse
 
 import bidict
 from fastapi import FastAPI, Query
@@ -32,18 +33,15 @@ class FacetBucket(BaseModel):
 
     key: str
     count: int
-
-
-class LabeledFacetBucket(FacetBucket):
-    label: str | None
+    label: str | None = None
 
 
 class Facets(BaseModel):
     """Facet aggregations for filtering."""
 
     publisher: list[FacetBucket]
-    organism: list[LabeledFacetBucket]
-    imaging_method: list[LabeledFacetBucket]
+    organism: list[FacetBucket]
+    imaging_method: list[FacetBucket]
     year_published: list[FacetBucket]
     license: list[FacetBucket]
 
@@ -78,12 +76,37 @@ def map_publisher(input: str, to_url: bool) -> str | None:
         return publisher_lookup.inverse.get(input)
 
 
+def map_licence(input: str, to_url: bool) -> str | None:
+    creative_commons = "https://creativecommons.org/licenses/{code}/{version}/"
+
+    if to_url:
+        if input == "CC0":
+            return creative_commons.format(code="zero", version="1.0")
+        elif input.startswith("CC-"):
+            split_input = input.removeprefix("CC-").split("-")
+            version = split_input[-1]
+            code = "-".join(split_input[:-1]).lower()
+            return creative_commons.format(code=code, version=version)
+
+    else:
+        # <scheme>://<netloc>/<path>;<params>?<query>#<fragment>
+        url = urlparse(input)
+        if url.netloc == "creativecommons.org":
+            if url.path == "/publicdomain/zero/1.0/":
+                return "CC0"
+            else:
+                licence_path = url.path.split("/")
+                licence_code = licence_path[2]
+                licence_version = licence_path[3]
+                return f"CC {licence_code.replace('-', ' ').upper()} {licence_version}"
+
+
 def parse_aggregate(
     aggregations: dict,
     source_key: str,
     nested_source_key: str | None = None,
     label_mapping_function: Callable[[str], str | None] | None = None,
-) -> list[FacetBucket] | list[LabeledFacetBucket]:
+) -> list[FacetBucket]:
     aggs = []
     if nested_source_key:
         buckets = (
@@ -109,7 +132,7 @@ def parse_aggregate(
 
         if key_label:
             aggs.append(
-                LabeledFacetBucket(
+                FacetBucket(
                     key=bucket.get("key_as_string", bucket["key"]),
                     count=bucket["doc_count"],
                     label=key_label,
@@ -158,7 +181,11 @@ def parse_es_response(es_response: dict) -> SearchResponse:
         label_mapping_function=lambda agg_key: map_publisher(agg_key, False),
     )
     years = parse_aggregate(aggregations, "year_published")
-    license = parse_aggregate(aggregations, "license")
+    license = parse_aggregate(
+        aggregations,
+        "license",
+        label_mapping_function=lambda agg_key: map_licence(agg_key, False),
+    )
 
     facets = (
         Facets(
@@ -252,6 +279,10 @@ def search(
     if publisher:
         publisher_urls = [map_publisher(p, to_url=True) or p for p in publisher]
 
+    license_urls = None
+    if license:
+        license_urls = [map_licence(l, to_url=True) or l for l in license]
+
     es_response = indexer.faceted_search(
         query=q,
         publishers=publisher_urls,
@@ -259,7 +290,7 @@ def search(
         imaging_methods=(
             expand_short_identifier(imaging_method) if imaging_method else None
         ),
-        licenses=license,
+        licenses=license_urls,
         date_from=date_from,
         date_to=date_to,
         require_thumbnail=require_thumbnail,
