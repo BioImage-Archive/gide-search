@@ -1,6 +1,7 @@
+from urllib import parse
+
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing_extensions import Self
-from urllib import parse
 
 
 class JsonLdNode(BaseModel):

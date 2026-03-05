@@ -416,7 +416,7 @@ class DatabaseEntryIndexer:
                     "nested": {"path": "taxon_ids"},
                     "aggs": {
                         "taxon_ids": {
-                            "terms": {"field": "taxon_ids.id", "size": 50},
+                            "terms": {"field": "taxon_ids.id", "size": 200},
                             "aggs": {
                                 "name": {
                                     "top_hits": {
@@ -432,7 +432,7 @@ class DatabaseEntryIndexer:
                     "nested": {"path": "imaging_method_ids"},
                     "aggs": {
                         "imaging_method_ids": {
-                            "terms": {"field": "imaging_method_ids.id", "size": 50},
+                            "terms": {"field": "imaging_method_ids.id", "size": 70},
                             "aggs": {
                                 "name": {
                                     "top_hits": {
@@ -455,6 +455,7 @@ class DatabaseEntryIndexer:
                         "field": "datePublished",
                         "calendar_interval": "year",
                         "format": "yyyy",
+                        "order": {"_key": "desc"},
                     },
                 },
             },
