@@ -588,6 +588,20 @@ def idr(
     fetcher.fetch_idr_ro_crates(output_path, progress_callback=progress)
 
 
+@fetch_ro_crate.command(help="Download SSBD ro-crates.")
+def ssbd(
+    output_path: Path = typer.Argument(
+        DEFAULT_RO_CRATE_OUTPUT,
+        help="Path to write ro-crate-files.",
+    ),
+):
+    pbar = tqdm(total=0)
+    progress = lambda current, total: progress_tracking(current, total, pbar)
+
+    fetcher = ROCrateFetcher()
+    fetcher.fetch_ssbd_ro_crates(output_path, progress_callback=progress)
+
+
 def main() -> None:
     app()
 
