@@ -109,7 +109,7 @@ Note that the requirements requirements below apply to both the json field names
 | identifier | schema:identifier | Recommended | 1 | MUST be a unique identifier used by the publisher of the dataset to refer to this dataset. |
 | keywords | schema:keywords | optional | 0+ | Relevant keywords or tags used to describe the subject, methods, or contents of dataset. |  
 | funder | schema:funder | optional | 0+ | The _Grants_ which funded the contributors or creation of this dataset.  |  
-| seeAlso | rdf:seeAlso | optional | 0+ | The _ScholarlyArticles_ that were published alongside, or supported by, this Dataset. |  
+| seeAlso | rdfs:seeAlso | optional | 0+ | The _ScholarlyArticles_ that were published alongside, or supported by, this Dataset. |  
 | size | schema:size | optional | 0+ | _QuantitativeValues_ defining dimensions of the Dataset. Some dimensions are recommended (see the _QuantitativeValue_ section below) |  
 
 ### Person
