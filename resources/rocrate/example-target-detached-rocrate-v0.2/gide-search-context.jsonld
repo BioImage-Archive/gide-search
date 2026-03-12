@@ -1,17 +1,23 @@
 {
+    "@id": "https://gide-search/1.0/context",
+    "name": "Global Image Data Ecosystem RO-Crate Search Context",
+    "version": "1.0",
+    "url": {
+        "@id": "https://gide-search/1.0/context"
+    },
+    "isBasedOn": [
+        {
+            "@id": "https://w3id.org/ro/crate/1.2/context"
+        }
+    ],
     "@context": [
         "https://w3id.org/ro/crate/1.2/context",
         {
-            "bia": "https://bioimage-archive.org/ro-crate/",
             "obo": "http://purl.obolibrary.org/obo/",
             "dwc": "http://rs.tdwg.org/dwc/terms/",
             "dwciri": "http://rs.tdwg.org/dwc/iri/",
             "bao": "http://www.bioassayontology.org/bao#",
             "xsd": "http://www.w3.org/2001/XMLSchema#",
-            "datePublished": {
-                "@id": "http://schema.org/datePublished",
-                "@type": "xsd:date"
-            },
             "vernacularName": {
                 "@id": "dwc:vernacularName"
             },
@@ -25,7 +31,7 @@
                 "@id": "dwciri:measurementMethod"
             },
             "seeAlso": {
-                "@id": "rdf:seeAlso"
+                "@id": "rdfs:seeAlso"
             },
             "BioSample": {
                 "@id": "http://schema.org/BioSample"
