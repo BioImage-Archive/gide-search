@@ -102,7 +102,7 @@ class BioSample(JsonLdNode):
     description: str
 
     taxonomicRange: list[Taxon] = Field(default_factory=list)
-    hasCellLine: list[DefinedTerm] = Field(default_factory=list)
+    hasCellLine: list[DefinedTerm | str] | str = Field(default_factory=list)
 
 
 class LabProtocol(JsonLdNode):
