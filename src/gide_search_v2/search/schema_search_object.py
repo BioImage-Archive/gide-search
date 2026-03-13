@@ -91,7 +91,7 @@ class DefinedTerm(JsonLdNode):
     def fix_common_iri_errors(cls, value: str) -> str:
         # FBbi ids require that specific capitalization, which is easy to get incorrect.
         if value.lower().startswith("http://purl.obolibrary.org/obo/fbbi_"):
-            digits = str(value).split("_")[1]
+            digits = str(value).split("_")[1].zfill(8)[-8:]
             return f"http://purl.obolibrary.org/obo/FBbi_{digits}"
         else:
             return value
