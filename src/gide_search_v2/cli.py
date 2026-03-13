@@ -10,6 +10,7 @@ from pydantic import ValidationError
 from tqdm import tqdm
 
 from gide_search_v2.search.indexer import DatabaseEntryIndexer
+from gide_search_v2.search.schema_search_object import IndexableDataset
 
 from .transformers import BIAROCrateTransformer, ROCrateIndexTransformer
 from .utils.fetch_ro_crate import ROCrateFetcher
@@ -84,7 +85,7 @@ def transform_to_index(
         raise ValueError(f"No ro-crate-metadata.json files found in {path}")
 
     transformer = ROCrateIndexTransformer()
-    results = []
+    results: list[dict] = []
     for metadata_file in tqdm(sorted(metadata_files), desc="Transforming RO-Crates"):
         try:
             with open(metadata_file) as f:
@@ -98,6 +99,8 @@ def transform_to_index(
             results.append(transformed)
         except Exception as e:
             typer.echo(f"Error transforming {metadata_file}: {e}", err=True)
+
+    results.sort(key=lambda item: item["datePublished"], reverse=True)
 
     output_path.mkdir(parents=True, exist_ok=True)
     with open(output_path / DEFAULT_INDEX_FILE, "w") as f:

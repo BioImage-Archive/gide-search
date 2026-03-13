@@ -323,14 +323,18 @@ class BIAROCrateTransformer(ROCrateTransformer):
         ro_crate_metadata = {
             "@context": self._get_ro_crate_context(),
             "@graph": [
-                self._get_ro_crate_ref(entry_uri, accession_id),
                 self._get_root_dataset(single_object),
             ],
         }
+
         flattened = jsonld.flatten(
             ro_crate_metadata, ctx=self._get_ro_crate_context_with_containers()
         )
+
         flattened["@context"] = self._get_ro_crate_context()
-        sorted_graph_objects = sorted(flattened["@graph"], key=self.type_rank)
-        flattened["@graph"] = sorted_graph_objects
+        sorted_graph_objects = sorted(
+           flattened["@graph"],
+            key=self.type_rank,
+        )
+        flattened["@graph"] = [self._get_ro_crate_ref(entry_uri)] + sorted_graph_objects
         return flattened
