@@ -33,10 +33,6 @@ class ROCrateTransformer(Transformer):
                 "BioSample": {"@id": "http://schema.org/BioSample"},
                 "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
                 "labEquipment": {"@id": "http://schema.org/labEquipment"},
-                "datePublished": {
-                    "@id": "http://schema.org/datePublished",
-                    "@type": "xsd:date",
-                },
             },
         ]
 
@@ -82,9 +78,9 @@ class ROCrateTransformer(Transformer):
             },
         ]
 
-    def _get_ro_crate_ref(self, entry_url: str, database_id: str) -> dict:
+    def _get_ro_crate_ref(self, entry_url: str) -> dict:
         return {
-            "@id": f"{database_id}-ro-crate-metadata.json",
+            "@id": "ro-crate-metadata.json",
             "@type": "CreativeWork",
             "conformsTo": {"@id": "https://w3id.org/ro/crate/1.2"},
             "about": {"@id": entry_url},
