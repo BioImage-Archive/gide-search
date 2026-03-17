@@ -4,72 +4,29 @@ from pydantic import ValidationError
 from pyld import jsonld
 
 from gide_search_v2.search.schema_search_object import IndexableDataset
-from gide_search_v2.transformers.base_transformer import Transformer
+from gide_search_v2.transformers.frame_transformer import FrameTransformer
 
 logger = logging.getLogger("__main__." + __name__)
 
 
-class ROCrateIndexTransformer(Transformer):
+class ROCrateIndexTransformer(FrameTransformer):
 
-    FRAME = {
-        "@context": [
-            "https://w3id.org/ro/crate/1.2/context",
-            {
-                "bia": "https://bioimage-archive.org/ro-crate/",
-                "dwc": "http://rs.tdwg.org/dwc/terms/",
-                "bao": "http://www.bioassayontology.org/bao#",
-                "dwciri": "http://rs.tdwg.org/dwc/iri/",
-                "xsd": "http://www.w3.org/2001/XMLSchema#",
-                "vernacularName": {"@id": "dwc:vernacularName"},
-                "scientificName": {"@id": "dwc:scientificName"},
-                "BioSample": {"@id": "http://schema.org/BioSample"},
-                "LabProtocol": {"@id": "http://schema.org/LabProtocol"},
-                "labEquipment": {"@id": "http://schema.org/labEquipment"},
-                "hasCellLine": {"@id": "bao:BAO_0002004", "@container": "@set"},
-                "measurementMethod": {
-                    "@id": "dwciri:measurementMethod",
-                    "@container": "@set",
-                },
-                "taxonomicRange": {
-                    "@id": "http://schema.org/taxonomicRange",
-                    "@container": "@set",
-                },
-                "seeAlso": {"@id": "rdf:seeAlso", "@container": "@set"},
-                "measurementTechnique": {
-                    "@id": "http://schema.org/measurementTechnique",
-                    "@container": "@set",
-                },
-                "about": {"@id": "http://schema.org/about", "@container": "@set"},
-                "citation": {"@id": "http://schema.org/citation", "@container": "@set"},
-                "author": {
-                    "@id": "http://schema.org/author",
-                    "@container": "@set",
-                },
-                "affiliation": {
-                    "@id": "http://schema.org/affiliation",
-                    "@container": "@set",
-                },
-                "funder": {"@id": "http://schema.org/funder", "@container": "@set"},
-                "keywords": {"@id": "http://schema.org/keywords", "@container": "@set"},
-                "size": {"@id": "http://schema.org/size", "@container": "@set"},
-                "thumbnailUrl": {
-                    "@id": "http://schema.org/thumbnailUrl",
-                    "@container": "@set",
-                },
-                "@type": {"@container": "@set"},
-                # "id": "@id",
-            },
-        ],
+    FRAME_BASE = {
         "@type": "Dataset",
         "@embed": "@always",
     }
+    frame: dict
 
     def __init__(self):
+        self.frame = self.FRAME_BASE | { "@context": self._get_ro_crate_context_with_containers()}
         super().__init__()
 
     def transform(self, single_object: dict):
 
-        framed_doc = jsonld.frame(single_object, self.FRAME)
+        # FIXME: currently replacing context with defined one while we all update our ro-crates.
+        single_object["@context"] = "https://www.gide-project.org/ro-crate/search/1.0/context"
+
+        framed_doc = jsonld.frame(single_object, self.frame)
 
         if not isinstance(framed_doc, dict):
             raise TypeError()
