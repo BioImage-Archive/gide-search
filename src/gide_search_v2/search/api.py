@@ -21,7 +21,7 @@ app = FastAPI(
     title="gide-search",
     description="Unified search API for biological imaging databases",
     version="0.1.0",
-    fast_api_root=FAST_API_PATH
+    root_path=FAST_API_PATH
 )
 
 # Initialize indexer from environment or defaults
