@@ -1,7 +1,7 @@
 import hashlib
 from uuid import UUID
 
-from gide_search_v2.transformers.frame_transformer import FrameTransformer
+from gide_search.transformers.frame_transformer import FrameTransformer
 
 
 class ROCrateTransformer(FrameTransformer):

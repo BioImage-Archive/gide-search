@@ -23,8 +23,9 @@ There are two main areas of the package:
 
 There are three steps to get data into elastic search:
 1. Transforming data from a source repository into a valid GIDE ro-crate.
-2. Transforming a GIDE ro-crate into a list of indexable documents
-3. Indexing these with elasticsearch
+2. Downloading ro-crates from the relevant github repositories.
+3. Transforming a GIDE ro-crate into a list of indexable documents
+4. Indexing these with elasticsearch
 
 You can see the list of commands by running
 ```bash
@@ -35,6 +36,8 @@ A typical sequence could look like:
 
 ```bash
 uv run gide-search data generate-bia-rocrate
+uv run gide-search data fetch-ro-crate idr
+uv run gide-search data fetch-ro-crate ssbd
 uv run gide-search data transform-to-index 
 ```
 This should generate ro-crates under output/ro-crate/ and an index document under output/index/.

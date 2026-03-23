@@ -1,4 +1,4 @@
-from gide_search_v2.transformers.base_transformer import Transformer
+from gide_search.transformers.base_transformer import Transformer
 
 
 class FrameTransformer(Transformer):

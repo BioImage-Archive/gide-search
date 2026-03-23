@@ -3,8 +3,8 @@ import logging
 from pydantic import ValidationError
 from pyld import jsonld
 
-from gide_search_v2.search.schema_search_object import IndexableDataset
-from gide_search_v2.transformers.frame_transformer import FrameTransformer
+from gide_search.search.schema_search_object import IndexableDataset
+from gide_search.transformers.frame_transformer import FrameTransformer
 
 logger = logging.getLogger("__main__." + __name__)
 
@@ -18,13 +18,17 @@ class ROCrateIndexTransformer(FrameTransformer):
     frame: dict
 
     def __init__(self):
-        self.frame = self.FRAME_BASE | { "@context": self._get_ro_crate_context_with_containers()}
+        self.frame = self.FRAME_BASE | {
+            "@context": self._get_ro_crate_context_with_containers()
+        }
         super().__init__()
 
     def transform(self, single_object: dict):
 
         # FIXME: currently replacing context with defined one while we all update our ro-crates.
-        single_object["@context"] = "https://www.gide-project.org/ro-crate/search/1.0/context"
+        single_object["@context"] = (
+            "https://www.gide-project.org/ro-crate/search/1.0/context"
+        )
 
         framed_doc = jsonld.frame(single_object, self.frame)
 
