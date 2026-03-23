@@ -4,6 +4,13 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 from typing_extensions import Self
 
 
+# Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
+PREFIXES_TO_EXPAND = {
+    "obo": "http://purl.obolibrary.org/obo/",
+    "bao": "http://www.bioassayontology.org/bao#",
+}
+
+
 class JsonLdNode(BaseModel):
     model_config = ConfigDict(
         populate_by_name=True,  # accept `id` AND `@id`
@@ -11,6 +18,20 @@ class JsonLdNode(BaseModel):
     )
     id: str = Field(alias="@id")
     type: list[str] = Field(alias="@type")
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def expand_id(cls, value) -> str:
+        # In case context is stripped, it is best to expand object IDs
+        if not isinstance(value, str):
+            raise TypeError
+
+        split_id = value.split(":", 1)
+        if len(split_id) > 1:
+            for prefix, full_url in PREFIXES_TO_EXPAND.items():
+                if split_id[0] == prefix:
+                    return f"{full_url}{split_id[1]}"
+        return value
 
 
 class QuantitiveValue(JsonLdNode):
@@ -199,10 +220,8 @@ class IndexableDataset(Dataset):
                 self.taxon_ids.append(biological_object)
 
         for measurment_object in self.measurementMethod:
-            if isinstance(
-                measurment_object, DefinedTerm
-            ) and measurment_object.id.startswith(
-                "http://purl.obolibrary.org/obo/FBbi_"
+            if isinstance(measurment_object, DefinedTerm) and (
+                measurment_object.id.startswith("http://purl.obolibrary.org/obo/FBbi_")
             ):
                 self.imaging_method_ids.append(measurment_object)
         return self
