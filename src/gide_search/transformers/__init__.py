@@ -1,8 +1,6 @@
 """Data transformers for converting source data to unified schema."""
 
-from .bia import BIATransformer
-from .idr import IDRTransformer
-from .rocrate import ROCrateTransformer
-from .ssbd import SSBDTransformer
+from .bia_to_rocrate import BIAROCrateTransformer
+from .rocrate_to_index import ROCrateIndexTransformer
 
-__all__ = ["BIATransformer", "IDRTransformer", "ROCrateTransformer", "SSBDTransformer"]
+__all__ = ["ROCrateIndexTransformer", "BIAROCrateTransformer"]

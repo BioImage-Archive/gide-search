@@ -3,7 +3,6 @@ from urllib import parse
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 from typing_extensions import Self
 
-
 # Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
 PREFIXES_TO_EXPAND = {
     "obo": "http://purl.obolibrary.org/obo/",

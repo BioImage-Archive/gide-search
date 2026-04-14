@@ -3,8 +3,8 @@ import re
 from pydantic import AnyUrl, ValidationError
 from pyld import jsonld
 
-from gide_search_v2.transformers.to_rocrate import ROCrateTransformer
-from gide_search_v2.utils.ontology_term_finder import OntologyTermFinder
+from gide_search.transformers.to_rocrate import ROCrateTransformer
+from gide_search.utils.ontology_term_finder import OntologyTermFinder
 
 
 class BIAROCrateTransformer(ROCrateTransformer):
@@ -333,7 +333,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
 
         flattened["@context"] = self._get_ro_crate_context()
         sorted_graph_objects = sorted(
-           flattened["@graph"],
+            flattened["@graph"],
             key=self.type_rank,
         )
         flattened["@graph"] = [self._get_ro_crate_ref(entry_uri)] + sorted_graph_objects
