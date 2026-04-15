@@ -5,6 +5,7 @@ from pyld import jsonld
 
 from gide_search.search.schema_search_object import IndexableDataset
 from gide_search.transformers.frame_transformer import FrameTransformer
+from gide_search.utils.ontology_term_finder import OntologyTermFinder
 
 logger = logging.getLogger("__main__." + __name__)
 
@@ -21,6 +22,7 @@ class ROCrateIndexTransformer(FrameTransformer):
         self.frame = self.FRAME_BASE | {
             "@context": self._get_ro_crate_context_with_containers()
         }
+        self.ontology_lookup = OntologyTermFinder()
         super().__init__()
 
     def transform(self, single_object: dict):
@@ -38,10 +40,13 @@ class ROCrateIndexTransformer(FrameTransformer):
         framed_doc.pop("@context")
 
         try:
-            dataset = IndexableDataset.model_validate(framed_doc)
+            dataset = IndexableDataset.model_validate(
+                framed_doc,
+                context={"ontology_lookup": self.ontology_lookup},
+            )
         except ValidationError as e:
             logger.error(
-                f"Validation failed for: {framed_doc.get("@id", "Unknown object")}"
+                f"Validation failed for: {framed_doc.get('@id', 'Unknown object')}"
             )
             raise e
 

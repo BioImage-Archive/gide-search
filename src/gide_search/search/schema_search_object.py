@@ -1,6 +1,7 @@
 from urllib import parse
+from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 from typing_extensions import Self
 
 # Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
@@ -8,6 +9,11 @@ PREFIXES_TO_EXPAND = {
     "obo": "http://purl.obolibrary.org/obo/",
     "bao": "http://www.bioassayontology.org/bao#",
 }
+
+
+class OntologyLookup(Protocol):
+    def fetch_labels_for_term_by_iri(self, term_iri: str):
+        ...
 
 
 class JsonLdNode(BaseModel):
@@ -115,6 +121,21 @@ class DefinedTerm(JsonLdNode):
             return f"http://purl.obolibrary.org/obo/FBbi_{digits}"
         else:
             return value
+    
+    @model_validator(mode="after")
+    def use_label_as_name(self, info: ValidationInfo) -> Self:
+        ontology_lookup: OntologyLookup | None = info.context.get(
+            "ontology_lookup"
+        )
+        if ontology_lookup is None:
+            return self
+
+        term_with_labels = ontology_lookup.fetch_labels_for_term_by_iri(self.id)
+        if term_with_labels is None:
+            raise ValueError(f"{self.id} not found in OLS")
+
+        self.name = term_with_labels.label[0]
+        return self
 
 
 class BioSample(JsonLdNode):
@@ -152,7 +173,7 @@ class Dataset(JsonLdNode):
 
     @field_validator("about", mode="before")
     @classmethod
-    def discriminate_about(cls, value):
+    def discriminate_about(cls, value, info: ValidationInfo):
         if not isinstance(value, list):
             return value
         out = []
@@ -162,11 +183,11 @@ class Dataset(JsonLdNode):
                 if isinstance(types, str):
                     types = [types]
                 if "BioSample" in types:
-                    out.append(BioSample.model_validate(item))
+                    out.append(BioSample.model_validate(item, context=info.context))
                 elif "Taxon" in types:
-                    out.append(Taxon.model_validate(item))
+                    out.append(Taxon.model_validate(item, context=info.context))
                 elif "DefinedTerm" in types:
-                    out.append(DefinedTerm.model_validate(item))
+                    out.append(DefinedTerm.model_validate(item, context=info.context))
                 else:
                     out.append(item)
             else:
@@ -175,7 +196,7 @@ class Dataset(JsonLdNode):
 
     @field_validator("measurementMethod", mode="before")
     @classmethod
-    def discriminate_measurement_method(cls, value):
+    def discriminate_measurement_method(cls, value, info: ValidationInfo):
         if not isinstance(value, list):
             return value
         out = []
@@ -185,9 +206,9 @@ class Dataset(JsonLdNode):
                 if isinstance(types, str):
                     types = [types]
                 if "LabProtocol" in types:
-                    out.append(LabProtocol.model_validate(item))
+                    out.append(LabProtocol.model_validate(item, context=info.context))
                 elif "DefinedTerm" in types:
-                    out.append(DefinedTerm.model_validate(item))
+                    out.append(DefinedTerm.model_validate(item, context=info.context))
                 else:
                     out.append(item)
             else:
@@ -210,7 +231,7 @@ class IndexableDataset(Dataset):
     imaging_method_ids: list[DefinedTerm] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def poplate_additional_index_fields(self) -> Self:
+    def populate_additional_index_fields(self) -> Self:
         """
         Populate the fields that get used for facetting
         """

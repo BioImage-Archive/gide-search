@@ -75,6 +75,32 @@ class OntologyTermFinder:
 
         return self._create_term_with_labels(term_info)
 
+    def fetch_labels_for_term_by_iri(self, term_iri: str):
+        ontology = self._ontology_for_term_iri(term_iri)
+        if ontology is None:
+            return
+
+        try:
+            return self.fetch_labels_for_term(ontology, term_iri)
+        except KeyError:
+            return
+
+    def _ontology_for_term_iri(self, term_iri: str) -> str | None:
+        if term_iri.startswith("obo:"):
+            term_iri = term_iri.removeprefix("obo:")
+
+        if term_iri.startswith("http://purl.obolibrary.org/obo/"):
+            local_part = term_iri.rsplit("/", 1)[-1]
+            prefix = local_part.split("_", 1)[0].lower()
+            return prefix
+
+        if term_iri.startswith("http://www.bioassayontology.org/bao#"):
+            return "bao"
+        if term_iri.startswith("bao:"):
+            return "bao"
+
+        return None
+
     @cache
     def _get_iri_for_class_in_ontology(
         self, ontology: str, search_terms: str, required_superclass: str | None = None
