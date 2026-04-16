@@ -1,9 +1,10 @@
-from typer.testing import CliRunner
-from gide_search.cli import app
-from pathlib import Path
-from types import SimpleNamespace
 import json
+from pathlib import Path
+
 import pytest
+from typer.testing import CliRunner
+
+from gide_search.cli import app
 
 runner = CliRunner()
 

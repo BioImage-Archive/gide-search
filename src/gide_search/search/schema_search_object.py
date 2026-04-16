@@ -1,5 +1,5 @@
-from urllib import parse
 from typing import Protocol
+from urllib import parse
 
 from pydantic import (
     BaseModel,
