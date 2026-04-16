@@ -1,6 +1,5 @@
 """Tests for CLI data index and search commands."""
 
-import json
 from pathlib import Path
 
 import pytest

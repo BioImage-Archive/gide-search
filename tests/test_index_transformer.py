@@ -29,10 +29,10 @@ def _create_rocrate_with_test_entities(test_name, test_entities: dict[str, list]
                 "conformsTo": {
                     "@id": "https://www.gide-project.org/ro-crate/search/1.0/profile"
                 },
-                "about": {"@id": "#dataset"},
+                "about": {"@id": "https://example.org/dataset"},
             },
             {
-                "@id": "#dataset",
+                "@id": "https://example.org/dataset",
                 "@type": "Dataset",
                 "identifier": test_name,
                 "name": f"Test: {test_name}",
@@ -100,7 +100,7 @@ def test_index_transform_default(tmpdir):
     with open(expected_index_path) as f:
         expected_index = json.loads(f.read())
 
-    assert expected_index == output_index
+    assert output_index == expected_index
 
 
 @pytest.mark.parametrize(
