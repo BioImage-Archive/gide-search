@@ -76,8 +76,29 @@ def _create_rocrate_with_test_entities(test_name, test_entities: dict[str, list]
     return ro_crate
 
 
-def test_index_transform_default(tmpdir):
+def test_index_transform_default(tmpdir, monkeypatch):
     """Test transformation of the default test fixture."""
+
+    def mock_fetch_label_by_iri(self, term_iri: str) -> str | None:
+        if term_iri == "http://purl.obolibrary.org/obo/FBbi_00000251":
+            return "confocal microscopy"
+        if term_iri == "http://purl.obolibrary.org/obo/NCBITaxon_10090":
+            return "Mus musculus"
+        return None
+
+    def mock_ontology_term_finder_init(self):
+        self.ebi_client = None
+        self.avaliable_ontology_ids = ["fbbi", "ncbitaxon"]
+
+    monkeypatch.setattr(
+        "gide_search.utils.ontology_term_finder.OntologyTermFinder.__init__",
+        mock_ontology_term_finder_init,
+    )
+    monkeypatch.setattr(
+        "gide_search.utils.ontology_term_finder.OntologyTermFinder.fetch_label_by_iri",
+        mock_fetch_label_by_iri,
+    )
+
     result = runner.invoke(
         app,
         [
