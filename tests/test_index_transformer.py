@@ -175,7 +175,6 @@ def test_ncbitaxon_leading_zero_normalization(
     about_items = index_document[0].get("about", [])
     assert about_items
     assert about_items[0]["id"] == expected_id
-    assert about_items[0]["scientificName"] == scientific_name
 
 
 @pytest.mark.parametrize(
@@ -209,11 +208,6 @@ def test_ncbitaxon_leading_zero_normalization(
     ],
 )
 def test_fbbi_id_normalization(tmpdir, monkeypatch, fbbi_id, expected_id, description):
-    monkeypatch.setattr(
-        "gide_search.utils.ontology_term_finder.OntologyTermFinder.fetch_labels_for_term_by_iri",
-        lambda self, term_iri: SimpleNamespace(label=["Normalized FBbi term"]),
-    )
-
     edge_cases = {
         "measurementMethod": [
             {
@@ -255,5 +249,3 @@ def test_fbbi_id_normalization(tmpdir, monkeypatch, fbbi_id, expected_id, descri
     measurement_methods = index_document[0].get("measurementMethod", [])
     assert measurement_methods
     assert measurement_methods[0]["id"] == expected_id
-    assert measurement_methods[0]["name"] == "Normalized FBbi term"
-

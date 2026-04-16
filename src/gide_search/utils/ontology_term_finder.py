@@ -10,7 +10,7 @@ logger = logging.getLogger("__main__." + __name__)
 
 
 @dataclass
-class TermWithLabels:
+class OntologyTerm:
     iri: str
     label: list[str]
     additional_label: list[str]
@@ -58,7 +58,9 @@ class OntologyTermFinder:
                 short_ids += short_id
 
     @cache
-    def fetch_labels_for_term(self, ontology: str, term_iri: str):
+    def fetch_term_from_ontology(
+        self, ontology: str, term_iri: str
+    ) -> None | OntologyTerm:
         if ontology not in self.avaliable_ontology_ids:
             raise KeyError(f"{ontology} is not in ols")
 
@@ -75,15 +77,21 @@ class OntologyTermFinder:
 
         return self._create_term_with_labels(term_info)
 
-    def fetch_labels_for_term_by_iri(self, term_iri: str):
+    def fetch_term_by_iri(self, term_iri: str) -> None | OntologyTerm:
         ontology = self._ontology_for_term_iri(term_iri)
         if ontology is None:
             return
 
         try:
-            return self.fetch_labels_for_term(ontology, term_iri)
+            return self.fetch_term_from_ontology(ontology, term_iri)
         except KeyError:
             return
+
+    def fetch_label_by_iri(self, term_iri: str) -> str | None:
+        term_with_labels = self.fetch_term_by_iri(term_iri)
+        if term_with_labels is None:
+            return None
+        return term_with_labels.label[0] if term_with_labels.label else None
 
     def _ontology_for_term_iri(self, term_iri: str) -> str | None:
         if term_iri.startswith("obo:"):
@@ -104,10 +112,10 @@ class OntologyTermFinder:
     @cache
     def _get_iri_for_class_in_ontology(
         self, ontology: str, search_terms: str, required_superclass: str | None = None
-    ) -> list[TermWithLabels]:
+    ) -> list[OntologyTerm]:
         api_response = self._find_class_in_ontology(ontology, search_terms)
 
-        iris_and_labels: list[TermWithLabels] = []
+        iris_and_labels: list[OntologyTerm] = []
         for ontology_term in api_response["elements"]:
             if required_superclass:
                 if not ontology_term["hasDirectParents"]:
@@ -123,7 +131,7 @@ class OntologyTermFinder:
 
         return iris_and_labels
 
-    def _create_term_with_labels(self, ontology_term) -> TermWithLabels:
+    def _create_term_with_labels(self, ontology_term) -> OntologyTerm:
         short_ids = []
         self._collect_short_ids(ontology_term.get("obo_id"), short_ids)
         self._collect_short_ids(ontology_term.get("curie"), short_ids)
@@ -135,7 +143,7 @@ class OntologyTermFinder:
             else [ontology_term["label"]]
         )
 
-        return TermWithLabels(
+        return OntologyTerm(
             **{
                 "iri": ontology_term["iri"],
                 "label": label,
