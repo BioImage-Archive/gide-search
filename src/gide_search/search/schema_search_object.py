@@ -1,7 +1,14 @@
 from urllib import parse
 from typing import Protocol
 
-from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 from typing_extensions import Self
 
 # Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
@@ -11,9 +18,8 @@ PREFIXES_TO_EXPAND = {
 }
 
 
-class OntologyLookup(Protocol):
-    def fetch_labels_for_term_by_iri(self, term_iri: str):
-        ...
+class TermLabelProvider(Protocol):
+    def fetch_label_by_iri(self, term_iri: str) -> str | None: ...
 
 
 class JsonLdNode(BaseModel):
@@ -121,21 +127,6 @@ class DefinedTerm(JsonLdNode):
             return f"http://purl.obolibrary.org/obo/FBbi_{digits}"
         else:
             return value
-    
-    @model_validator(mode="after")
-    def use_label_as_name(self, info: ValidationInfo) -> Self:
-        ontology_lookup: OntologyLookup | None = info.context.get(
-            "ontology_lookup"
-        )
-        if ontology_lookup is None:
-            return self
-
-        term_with_labels = ontology_lookup.fetch_labels_for_term_by_iri(self.id)
-        if term_with_labels is None:
-            raise ValueError(f"{self.id} not found in OLS")
-
-        self.name = term_with_labels.label[0]
-        return self
 
 
 class BioSample(JsonLdNode):
@@ -183,11 +174,11 @@ class Dataset(JsonLdNode):
                 if isinstance(types, str):
                     types = [types]
                 if "BioSample" in types:
-                    out.append(BioSample.model_validate(item, context=info.context))
+                    out.append(BioSample.model_validate(item))
                 elif "Taxon" in types:
-                    out.append(Taxon.model_validate(item, context=info.context))
+                    out.append(Taxon.model_validate(item))
                 elif "DefinedTerm" in types:
-                    out.append(DefinedTerm.model_validate(item, context=info.context))
+                    out.append(DefinedTerm.model_validate(item))
                 else:
                     out.append(item)
             else:
@@ -206,9 +197,9 @@ class Dataset(JsonLdNode):
                 if isinstance(types, str):
                     types = [types]
                 if "LabProtocol" in types:
-                    out.append(LabProtocol.model_validate(item, context=info.context))
+                    out.append(LabProtocol.model_validate(item))
                 elif "DefinedTerm" in types:
-                    out.append(DefinedTerm.model_validate(item, context=info.context))
+                    out.append(DefinedTerm.model_validate(item))
                 else:
                     out.append(item)
             else:
@@ -245,3 +236,13 @@ class IndexableDataset(Dataset):
             ):
                 self.imaging_method_ids.append(measurment_object)
         return self
+
+    def fetch_labels(self, label_provider: TermLabelProvider) -> None:
+        def _fetch_for_defined_term(term: DefinedTerm):
+            label = label_provider.fetch_label_by_iri(term.id)
+            if label is None:
+                raise ValueError(f"{term.id} not found in OLS")
+            term.name = label
+
+        for term in self.imaging_method_ids:
+            _fetch_for_defined_term(term)

@@ -125,7 +125,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                     else:
                         continue
 
-                term_with_labels = self.ontology_term_finder.fetch_labels_for_term(
+                term_with_labels = self.ontology_term_finder.fetch_term_from_ontology(
                     "ncbitaxon", ncbi_id
                 )
                 if term_with_labels:
@@ -217,7 +217,7 @@ class BIAROCrateTransformer(ROCrateTransformer):
                     )
         else:
             for fbbi_id in bia_image_acquisition_protocol["fbbi_id"]:
-                term_with_labels = self.ontology_term_finder.fetch_labels_for_term(
+                term_with_labels = self.ontology_term_finder.fetch_term_from_ontology(
                     "fbbi", fbbi_id
                 )
                 if term_with_labels:

@@ -82,7 +82,7 @@
             "type": [
               "DefinedTerm"
             ],
-            "name": "Hela cell"
+            "name": "HeLa cell"
           }
         ]
       },
@@ -100,7 +100,7 @@
         "type": [
           "DefinedTerm"
         ],
-        "name": "Hela cell"
+        "name": "HeLa cell"
       }
     ],
     "measurementMethod": [

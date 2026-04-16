@@ -40,10 +40,8 @@ class ROCrateIndexTransformer(FrameTransformer):
         framed_doc.pop("@context")
 
         try:
-            dataset = IndexableDataset.model_validate(
-                framed_doc,
-                context={"ontology_lookup": self.ontology_lookup},
-            )
+            dataset = IndexableDataset.model_validate(framed_doc)
+            dataset.fetch_labels(self.ontology_lookup)
         except ValidationError as e:
             logger.error(
                 f"Validation failed for: {framed_doc.get('@id', 'Unknown object')}"
