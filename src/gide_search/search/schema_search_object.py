@@ -1,3 +1,5 @@
+import logging
+
 from typing import Protocol
 from urllib import parse
 
@@ -10,6 +12,8 @@ from pydantic import (
     model_validator,
 )
 from typing_extensions import Self
+
+logger = logging.getLogger()
 
 # Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
 PREFIXES_TO_EXPAND = {
@@ -240,9 +244,10 @@ class IndexableDataset(Dataset):
     def fetch_labels(self, label_provider: TermLabelProvider) -> None:
         def _fetch_for_defined_term(term: DefinedTerm):
             label = label_provider.fetch_label_by_iri(term.id)
-            if label is None:
-                raise ValueError(f"{term.id} not found in OLS")
-            term.name = label
+            if label:
+                term.name = label
+            else:
+                logger.warning(f"{term.id} not found in ontology.")
 
         for term in self.imaging_method_ids:
             _fetch_for_defined_term(term)
