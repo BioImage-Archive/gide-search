@@ -1,13 +1,29 @@
+import logging
+
+from typing import Protocol
 from urllib import parse
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import (
+    BaseModel,
+    ConfigDict,
+    Field,
+    ValidationInfo,
+    field_validator,
+    model_validator,
+)
 from typing_extensions import Self
+
+logger = logging.getLogger()
 
 # Prefixes that might occur in object IDs that are likely to get shortened, which would be better left as full IRIs.
 PREFIXES_TO_EXPAND = {
     "obo": "http://purl.obolibrary.org/obo/",
     "bao": "http://www.bioassayontology.org/bao#",
 }
+
+
+class TermLabelProvider(Protocol):
+    def fetch_label_by_iri(self, term_iri: str) -> str | None: ...
 
 
 class JsonLdNode(BaseModel):
@@ -152,7 +168,7 @@ class Dataset(JsonLdNode):
 
     @field_validator("about", mode="before")
     @classmethod
-    def discriminate_about(cls, value):
+    def discriminate_about(cls, value, info: ValidationInfo):
         if not isinstance(value, list):
             return value
         out = []
@@ -175,7 +191,7 @@ class Dataset(JsonLdNode):
 
     @field_validator("measurementMethod", mode="before")
     @classmethod
-    def discriminate_measurement_method(cls, value):
+    def discriminate_measurement_method(cls, value, info: ValidationInfo):
         if not isinstance(value, list):
             return value
         out = []
@@ -210,7 +226,7 @@ class IndexableDataset(Dataset):
     imaging_method_ids: list[DefinedTerm] = Field(default_factory=list)
 
     @model_validator(mode="after")
-    def poplate_additional_index_fields(self) -> Self:
+    def populate_additional_index_fields(self) -> Self:
         """
         Populate the fields that get used for facetting
         """
@@ -224,3 +240,14 @@ class IndexableDataset(Dataset):
             ):
                 self.imaging_method_ids.append(measurment_object)
         return self
+
+    def fetch_labels(self, label_provider: TermLabelProvider) -> None:
+        def _fetch_for_defined_term(term: DefinedTerm):
+            label = label_provider.fetch_label_by_iri(term.id)
+            if label:
+                term.name = label
+            else:
+                logger.warning(f"{term.id} not found in ontology.")
+
+        for term in self.imaging_method_ids:
+            _fetch_for_defined_term(term)

@@ -26,14 +26,14 @@
         "email": "jane.researcher@university.edu"
       },
       {
-        "id": "#author-smith",
+        "id": "https://example-database.org/studies/EXAMPLE-001#author-smith",
         "type": [
           "Person"
         ],
         "name": "John Smith",
         "affiliation": [
           {
-            "id": "#org-institute",
+            "id": "https://example-database.org/studies/EXAMPLE-001#org-institute",
             "type": [
               "Organization"
             ],
@@ -59,7 +59,7 @@
     },
     "about": [
       {
-        "id": "#biosample-1",
+        "id": "https://example-database.org/studies/EXAMPLE-001#biosample-1",
         "type": [
           "BioSample"
         ],
@@ -82,7 +82,7 @@
             "type": [
               "DefinedTerm"
             ],
-            "name": "Hela cell"
+            "name": "HeLa cell"
           }
         ]
       },
@@ -100,12 +100,12 @@
         "type": [
           "DefinedTerm"
         ],
-        "name": "Hela cell"
+        "name": "HeLa cell"
       }
     ],
     "measurementMethod": [
       {
-        "id": "#imaging-protocol-1",
+        "id": "https://example-database.org/studies/EXAMPLE-001#imaging-protocol-1",
         "type": [
           "LabProtocol"
         ],
@@ -142,7 +142,7 @@
     ],
     "funder": [
       {
-        "id": "#grant-nih",
+        "id": "https://example-database.org/studies/EXAMPLE-001#grant-nih",
         "type": [
           "Grant"
         ],
@@ -153,7 +153,7 @@
     "seeAlso": [],
     "size": [
       {
-        "id": "#total-dataset-size",
+        "id": "https://example-database.org/studies/EXAMPLE-001#total-dataset-size",
         "type": [
           "QuantitativeValue"
         ],
@@ -162,7 +162,7 @@
         "unitCode": "http://purl.obolibrary.org/obo/UO_0000233"
       },
       {
-        "id": "#file-count",
+        "id": "https://example-database.org/studies/EXAMPLE-001#file-count",
         "type": [
           "QuantitativeValue"
         ],

@@ -201,7 +201,7 @@
         {
             "@id": "http://purl.obolibrary.org/obo/CLO_0003684",
             "@type": "DefinedTerm",
-            "name": "Hela cell"
+            "name": "HeLa cell"
         },
         {
             "@id": "#total-dataset-size",
