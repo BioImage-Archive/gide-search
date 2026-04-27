@@ -64,7 +64,7 @@ INDEX_MAPPING = {
             "funder": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "name": {
                         "type": "text",
                         "fields": {"keyword": {"type": "keyword"}},
@@ -251,24 +251,48 @@ class DatabaseEntryIndexer:
                                 "name^3",
                                 "description^2",
                                 "keywords^2",
+                                "identifier",
                             ],
                             "type": "best_fields",
                             "fuzziness": "AUTO",
                         },
                     },
-                    # Nested: authors
+                    # Nested: authors & their affiliations
                     {
                         "nested": {
                             "path": "author",
                             "query": {
-                                "match": {
-                                    "author.name": {
-                                        "query": query,
-                                        "fuzziness": "AUTO",
-                                    },
-                                },
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "match": {
+                                                "author.name": {
+                                                    "query": query,
+                                                    "fuzziness": "AUTO",
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "nested": {
+                                                "path": "author.affiliation",
+                                                "query": {
+                                                    "multi_match": {
+                                                        "query": query,
+                                                        "fields": [
+                                                            "author.affiliation.@id",
+                                                            "author.affiliation.name",
+                                                            "author.affiliation.url",
+                                                            "author.affiliation.address",
+                                                        ],
+                                                        "fuzziness": "AUTO",
+                                                    }
+                                                },
+                                            }
+                                        },
+                                    ]
+                                }
                             },
-                        },
+                        }
                     },
                     # Nested: biolocal data
                     {
@@ -281,6 +305,23 @@ class DatabaseEntryIndexer:
                                         "about.id",
                                         "about.name",
                                         "about.description",
+                                    ],
+                                    "fuzziness": "AUTO",
+                                },
+                            },
+                        },
+                    },
+                    # Nested: funders / grants
+                    {
+                        "nested": {
+                            "path": "funder",
+                            "query": {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": [
+                                        "funder.id",
+                                        "funder.name",
+                                        "funder.identifier",
                                     ],
                                     "fuzziness": "AUTO",
                                 },
