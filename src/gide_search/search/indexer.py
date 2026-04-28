@@ -15,7 +15,12 @@ INDEX_MAPPING = {
         "dynamic": "false",
         "properties": {
             "id": {"type": "keyword"},
-            "identifier": {"type": "keyword"},
+            "identifier": {
+                "type": "search_as_you_type",
+                "fields": {
+                    "keyword": {"type": "keyword"}
+                },
+            },
             "name": {
                 "type": "text",
                 "analyzer": "english",
@@ -64,7 +69,7 @@ INDEX_MAPPING = {
             "funder": {
                 "type": "nested",
                 "properties": {
-                    "@id": {"type": "keyword"},
+                    "id": {"type": "keyword"},
                     "name": {
                         "type": "text",
                         "fields": {"keyword": {"type": "keyword"}},
@@ -243,7 +248,19 @@ class DatabaseEntryIndexer:
         return {
             "bool": {
                 "should": [
-                    # Non-nested fields
+                    {"term": {"identifier.keyword": {"value": query, "boost": 10}}},
+                    {
+                        "multi_match": {
+                            "query": query,
+                            "type": "bool_prefix",
+                            "fields": [
+                                "identifier",
+                                "identifier._2gram",
+                                "identifier._3gram",
+                            ],
+                            "boost": 5,
+                        }
+                    },
                     {
                         "multi_match": {
                             "query": query,
@@ -253,22 +270,42 @@ class DatabaseEntryIndexer:
                                 "keywords^2",
                             ],
                             "type": "best_fields",
-                            "fuzziness": "AUTO",
                         },
                     },
-                    # Nested: authors
+                    # Nested: authors & their affiliations
                     {
                         "nested": {
                             "path": "author",
                             "query": {
-                                "match": {
-                                    "author.name": {
-                                        "query": query,
-                                        "fuzziness": "AUTO",
-                                    },
-                                },
+                                "bool": {
+                                    "should": [
+                                        {
+                                            "match": {
+                                                "author.name": {
+                                                    "query": query,
+                                                }
+                                            }
+                                        },
+                                        {
+                                            "nested": {
+                                                "path": "author.affiliation",
+                                                "query": {
+                                                    "multi_match": {
+                                                        "query": query,
+                                                        "fields": [
+                                                            "author.affiliation.@id",
+                                                            "author.affiliation.name",
+                                                            "author.affiliation.url",
+                                                            "author.affiliation.address",
+                                                        ],
+                                                    }
+                                                },
+                                            }
+                                        },
+                                    ]
+                                }
                             },
-                        },
+                        }
                     },
                     # Nested: biolocal data
                     {
@@ -282,7 +319,22 @@ class DatabaseEntryIndexer:
                                         "about.name",
                                         "about.description",
                                     ],
-                                    "fuzziness": "AUTO",
+                                },
+                            },
+                        },
+                    },
+                    # Nested: funders / grants
+                    {
+                        "nested": {
+                            "path": "funder",
+                            "query": {
+                                "multi_match": {
+                                    "query": query,
+                                    "fields": [
+                                        "funder.id",
+                                        "funder.name",
+                                        "funder.identifier",
+                                    ],
                                 },
                             },
                         },
@@ -299,7 +351,6 @@ class DatabaseEntryIndexer:
                                         "measurementMethod.description",
                                         "measurementMethod.id",
                                     ],
-                                    "fuzziness": "AUTO",
                                 },
                             },
                         },
