@@ -15,7 +15,12 @@ INDEX_MAPPING = {
         "dynamic": "false",
         "properties": {
             "id": {"type": "keyword"},
-            "identifier": {"type": "keyword"},
+            "identifier": {
+                "type": "search_as_you_type",
+                "fields": {
+                    "keyword": {"type": "keyword"}
+                },
+            },
             "name": {
                 "type": "text",
                 "analyzer": "english",
@@ -243,7 +248,19 @@ class DatabaseEntryIndexer:
         return {
             "bool": {
                 "should": [
-                    # Non-nested fields
+                    {"term": {"identifier.keyword": {"value": query, "boost": 10}}},
+                    {
+                        "multi_match": {
+                            "query": query,
+                            "type": "bool_prefix",
+                            "fields": [
+                                "identifier",
+                                "identifier._2gram",
+                                "identifier._3gram",
+                            ],
+                            "boost": 5,
+                        }
+                    },
                     {
                         "multi_match": {
                             "query": query,
@@ -251,10 +268,8 @@ class DatabaseEntryIndexer:
                                 "name^3",
                                 "description^2",
                                 "keywords^2",
-                                "identifier",
                             ],
                             "type": "best_fields",
-                            "fuzziness": "AUTO",
                         },
                     },
                     # Nested: authors & their affiliations
@@ -268,7 +283,6 @@ class DatabaseEntryIndexer:
                                             "match": {
                                                 "author.name": {
                                                     "query": query,
-                                                    "fuzziness": "AUTO",
                                                 }
                                             }
                                         },
@@ -284,7 +298,6 @@ class DatabaseEntryIndexer:
                                                             "author.affiliation.url",
                                                             "author.affiliation.address",
                                                         ],
-                                                        "fuzziness": "AUTO",
                                                     }
                                                 },
                                             }
@@ -306,7 +319,6 @@ class DatabaseEntryIndexer:
                                         "about.name",
                                         "about.description",
                                     ],
-                                    "fuzziness": "AUTO",
                                 },
                             },
                         },
@@ -323,7 +335,6 @@ class DatabaseEntryIndexer:
                                         "funder.name",
                                         "funder.identifier",
                                     ],
-                                    "fuzziness": "AUTO",
                                 },
                             },
                         },
@@ -340,7 +351,6 @@ class DatabaseEntryIndexer:
                                         "measurementMethod.description",
                                         "measurementMethod.id",
                                     ],
-                                    "fuzziness": "AUTO",
                                 },
                             },
                         },
